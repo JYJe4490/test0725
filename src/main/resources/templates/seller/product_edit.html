@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>판매자 센터 - 상품 수정</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cabin:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+        --color-primary: #658352;
+        --color-white: #ffffff;
+        --color-light-gray: #f0f0f0;
+        --layout-max-width: 1200px;
+    }
+
+    body {
+        margin: 0;
+        font-family: 'Inter', 'Cabin', sans-serif;
+        background-color: #FBF9EF;
+        color: #1E2203;
+        padding: 120px 20px 40px; /* 상단 여백 확보, 기존 여백 유지 */
+        box-sizing: border-box;
+    }
+
+    /* --- Navbar Styles --- */
+    .navbar-container {
+        top: 0;
+        left: 0;
+        width: 100%;
+        display: flex;
+        z-index: 1000;
+        position: fixed;
+        justify-content: center;
+        background: var(--color-white);
+        box-shadow: 0 2px 12px 0 rgba(0,0,0,0.06);
+    }
+    .navbar {
+        width: 100%;
+        display: flex;
+        max-width: var(--layout-max-width);
+        align-items: center;
+        padding: 16px 48px;
+        justify-content: space-between;
+    }
+    .navbar-logo-img {
+        height: 3rem;
+        border-radius: 8px;
+    }
+    .navbar-buttons {
+        gap: 16px;
+        display: flex;
+        align-items: center;
+    }
+    .btn-filled, .btn-outline {
+        display: flex;
+        align-items: center;
+        font-weight: bold;
+        padding: 10px 24px;
+        border-radius: 24px;
+        font-size: 1rem;
+        text-decoration: none;
+        transition: background .2s, color .2s;
+        cursor: pointer;
+        border: 1px solid var(--color-primary);
+    }
+    .btn-filled {
+        color: var(--color-white);
+        background: var(--color-primary);
+    }
+    .btn-filled:hover {
+        opacity: 0.9;
+    }
+    .btn-outline {
+        color: var(--color-primary);
+        background: transparent;
+    }
+    .btn-outline:hover {
+        background: rgba(101, 131, 82, 0.1);
+    }
+
+    /* --- Form Styles --- */
+    h2 {
+        font-family: 'Cabin', sans-serif;
+        font-weight: 700;
+        color: #658352;
+        text-align: center;
+        font-size: 2.4rem;
+        margin: 0 0 24px 0;
+    }
+    .form-container {
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        background-color: #fff;
+        padding: 32px 40px;
+        border-radius: 20px;
+        box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.1);
+    }
+    .form-section {
+        margin-bottom: 30px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 30px;
+    }
+    .form-section:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 10px;
+    }
+    .form-section h3 {
+        font-size: 1.2rem;
+        color: #4d683f;
+        margin-bottom: 20px;
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-group label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+    }
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group input[type="url"],
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        font-size: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-sizing: border-box;
+    }
+    .form-group textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 20px;
+    }
+    .form-actions button {
+        padding: 12px 28px;
+        font-size: 1.05rem;
+        font-weight: bold;
+        border-radius: 8px;
+        border: 1px solid #658352;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .submit-btn {
+        background-color: #658352;
+        color: white;
+    }
+    .submit-btn:hover {
+        background-color: #4d683f;
+    }
+    .cancel-btn {
+        background-color: #f0f0f0;
+        color: #555;
+        border-color: #ddd;
+    }
+    .cancel-btn:hover {
+        background-color: #e0e0e0;
+    }
+  </style>
+</head>
+<body>
+<header class="navbar-container">
+  <div class="navbar">
+    <a th:href="@{/home}">
+      <img th:src="@{/images/free-icon-sprout-7101338.png}" alt="로고" class="navbar-logo-img"/>
+    </a>
+    <div class="navbar-buttons">
+      <a th:if="${name != null}" th:href="@{/seller/myPage/{sid}(sid=${sid})}" style="margin-right: 12px; font-weight: bold; text-decoration: none; color: var(--color-primary);">
+        <span th:text="${name}"></span>
+      </a>
+      <a th:href="@{/seller/main/{sid}(sid=${sid})}" class="btn-outline">대시보드</a>
+      <a th:href="@{/seller/list/{sid}(sid=${sid})}" class="btn-outline">판매 목록</a>
+      <form th:action="@{/seller/logout}" method="post" style="display:inline;">
+        <button type="submit" class="btn-filled">로그아웃</button>
+      </form>
+    </div>
+  </div>
+</header>
+
+<h2>상품 수정</h2>
+<div class="form-container">
+  <form id="productEditForm" th:action="@{/seller/product/{id}/edit(id=${product.productId})}" method="post" th:object="${product}">
+
+    <div class="form-section">
+      <h3>기본 정보</h3>
+      <div class="form-group">
+        <label for="productName">상품 이름</label>
+        <input type="text" id="productName" th:field="*{productName}" required>
+      </div>
+      <div class="form-group">
+        <label for="title">고객에게 보여줄 제목</label>
+        <input type="text" id="title" th:field="*{title}" required>
+      </div>
+      <div class="form-group">
+        <label for="content">상품 내용</label>
+        <textarea id="content" th:field="*{content}" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="CountryOfOrigin">원산지</label>
+        <input type="text" id="CountryOfOrigin" th:field="*{countryOfOrigin}" required>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>판매 정보</h3>
+      <div class="form-group">
+        <label for="price">가격 (원)</label>
+        <input type="number" id="price" th:field="*{price}" required>
+      </div>
+      <div class="form-group">
+        <label for="quantity">수량 (재고)</label>
+        <input type="number" id="quantity" th:field="*{quantity}" required>
+      </div>
+      <div class="form-group">
+        <label for="status">판매 상태</label>
+        <select id="status" th:field="*{status}" required>
+          <option th:value="'판매중'" th:text="'판매중'"></option>
+          <option th:value="'재고소진'" th:text="'재고소진'"></option>
+          <option th:value="'비활성화'" th:text="'비활성화'"></option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h3>이미지 등록</h3>
+      <div class="form-group">
+        <label for="thumbnail">섬네일 사진 URL</label>
+        <input type="url" id="thumbnail" th:field="*{thumbnail}" placeholder="대표 이미지 URL을 입력하세요">
+      </div>
+<!--      <div class="form-group">-->
+<!--        <label for="productImages">제품 사진 URL (쉼표(,)로 구분)</label>-->
+<!--        <input type="text" id="productImages" th:field="*{productImages}" placeholder="추가 이미지 URL을 쉼표로 구분하여 입력하세요">-->
+<!--      </div>-->
+    </div>
+
+    <div class="form-section">
+      <h3>배송 정보</h3>
+      <div class="form-group">
+        <label for="shippingFee">배송비 (원)</label>
+        <input type="number" id="shippingFee" th:field="*{deliveryFee}" required>
+      </div>
+      <div class="form-group">
+        <label for="shippingMethod">배송 방법</label>
+        <textarea id="shippingMethod" th:field="*{deliveryMethod}" rows="3"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="shippingInfo">배송 안내</label>
+        <textarea id="shippingInfo" th:field="*{deliveryInformation}" rows="3"></textarea>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="cancel-btn" onclick="history.back()">취소</button>
+      <button type="submit" class="submit-btn">수정 완료</button>
+    </div>
+  </form>
+</div>
+</body>
+</html>

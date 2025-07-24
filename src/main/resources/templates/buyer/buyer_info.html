@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>계정 정보</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cabin:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    /* --- Navbar Styles (Added) --- */
+    .navbar-container {
+        top: 0;
+        left: 0;
+        width: 100%;
+        display: flex;
+        z-index: 1000;
+        position: fixed;
+        justify-content: center;
+        background: #fff;
+        box-shadow: 0 2px 12px 0 rgba(0,0,0,0.06);
+    }
+    .navbar {
+        width: 100%;
+        display: flex;
+        max-width: 1400px;
+        align-items: center;
+        padding: 16px 48px;
+        justify-content: space-between;
+    }
+    .navbar-logo-img {
+        height: 3rem;
+        border-radius: 8px;
+    }
+    .navbar-buttons {
+        gap: 16px;
+        display: flex;
+        align-items: center;
+    }
+    .btn-filled, .btn-outline {
+        display: flex;
+        align-items: center;
+        font-weight: bold;
+        padding: 10px 24px;
+        border-radius: 24px;
+        font-size: 1rem;
+        text-decoration: none;
+        transition: background .2s, color .2s;
+        cursor: pointer;
+        border: 1px solid #658352;
+    }
+    .btn-filled {
+        color: #fff;
+        background: #658352;
+    }
+    .btn-filled:hover { opacity: 0.9; }
+    .btn-outline {
+        color: #658352;
+        background: transparent;
+    }
+    .btn-outline:hover { background: rgba(101, 131, 82, 0.1); }
+    
+    .user-name {
+        color: #658352;
+        font-weight: 600;
+        text-decoration: none;
+        padding: 8px 16px;
+        border-radius: 20px;
+        transition: all 0.2s ease;
+    }
+    .user-name:hover {
+        background-color: #658352;
+        color: #fff;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(101, 131, 82, 0.3);
+    }
+    /* --- End Navbar Styles --- */
+
+    html, body {
+        width: 100%;
+        height: 100%;
+        min-width: 0;
+        min-height: 0;
+        overflow-x: auto;
+    }
+    body {
+        margin: 0;
+        font-family: 'Inter', 'Cabin', sans-serif;
+        background: #FBF9EF;
+        color: #1E2203;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 120px 20px 40px; /* Adjusted for navbar */
+        box-sizing: border-box;
+    }
+    .page-wrapper {
+        display: flex;
+        align-items: stretch;
+        gap: 24px;
+        width: 900px;
+        height: 700px;
+        margin: 0 auto;
+        flex-wrap: nowrap;
+    }
+    .order-panel,
+    .account-container {
+        box-sizing: border-box;
+        height: 650px;
+    }
+    .order-panel {
+        background: #fff;
+        padding: 20px 24px;
+        border-radius: 20px;
+        box-shadow: 0 0 8px rgba(0,0,0,0.1);
+        width: 180px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 32px;
+    }
+    .panel-button {
+        width: 150px;
+        padding: 12px 0;
+        font-size: 0.95rem;
+        font-weight: bold;
+        border-radius: 24px;
+        border: 1px solid #658352;
+        background: #658352;
+        color: #fff;
+        cursor: pointer;
+        margin-bottom: 0;
+        transition: background 0.2s, color 0.2s;
+    }
+    .panel-button:hover {
+        background: #94A687;
+        color: #F5F4ED;
+    }
+    .account-container {
+        background: #fff;
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 0 8px rgba(0,0,0,0.1);
+        width: 650px;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .account-container h2 {
+        font-family: 'Cabin', sans-serif;
+        font-weight: 700;
+        color: #658352;
+        text-align: center;
+        margin-bottom: 28px;
+        font-size: 1.3rem;
+    }
+    .account-info p {
+        display: flex;
+        align-items: center;
+        margin: 12px 0;
+        padding: 8px 12px;
+        border-bottom: 1px solid #ddd;
+        font-size: 1rem;
+    }
+    .account-info p:last-child {
+        border-bottom: none;
+    }
+    .account-info strong {
+        width: 70px;
+        text-align: left;
+        font-weight: 600;
+        color: #3d4d2b;
+    }
+    .account-info .colon {
+        width: 16px;
+        text-align: center;
+        color: #bbb;
+    }
+    .account-info span:not(.colon) {
+        flex: 1;
+        text-align: right;
+        font-weight: bold;
+        color: #222;
+    }
+    .account-actions {
+        margin-top: auto; /* Pushes buttons to the bottom */
+        display: flex;
+        gap: 14px;
+        justify-content: center;
+    }
+    .account-actions button {
+        width: 120px;
+        padding: 10px 0;
+        font-size: 1rem;
+        border-radius: 20px;
+        border: 1px solid #658352;
+        background: #658352;
+        color: #fff;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .account-actions button:hover {
+        background: #94A687;
+    }
+
+    #deleteBtn {
+        background-color: #c53030;
+        border-color: #c53030;
+    }
+
+    #deleteBtn:hover {
+        background-color: #a00;
+        border-color: #a00;
+    }
+
+    .modal {
+        display: none; /* Hidden by default */
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
+    }
+    .modal.active {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .modal-content {
+        background-color: #fefefe;
+        padding: 24px;
+        border: 1px solid #888;
+        width: 90%;
+        max-width: 400px;
+        border-radius: 16px;
+        text-align: center;
+        position: relative;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        animation: modalPop 0.3s ease-out;
+    }
+    @keyframes modalPop {
+        0% { transform: scale(0.9); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    .modal-content h2 {
+        margin-top: 0;
+        color: #658352;
+        font-size: 1.15rem;
+        font-weight: 700;
+    }
+    .modal-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 25px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+        position: relative;
+    }
+
+    .modal-icon.warning {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+        box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+    }
+
+    .modal-icon.security {
+        background: linear-gradient(135deg, #658352, #5a7347);
+        color: white;
+        box-shadow: 0 8px 25px rgba(101, 131, 82, 0.3);
+    }
+
+    .close-button {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        color: #aaa;
+        font-size: 24px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: color 0.3s ease;
+    }
+
+    .close-button:hover,
+    .close-button:focus {
+        color: #666;
+    }
+
+    .modal-content h2 {
+        margin: 0 0 15px 0;
+        font-family: 'Cabin', sans-serif;
+        font-size: 1.6rem;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        color: #2c3e50;
+    }
+
+    .modal-content .warning-title {
+        color: #dc3545;
+    }
+
+    .modal-content p {
+        margin-bottom: 25px;
+        color: #6c757d;
+        font-size: 1rem;
+        line-height: 1.6;
+        font-weight: 400;
+    }
+
+    .modal-content .warning-text {
+        color: #495057;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    #passwordInput {
+        width: 100%;
+        padding: 15px 20px;
+        margin-bottom: 8px;
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        box-sizing: border-box;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: #f8f9fa;
+    }
+
+    #passwordInput:focus {
+        outline: none;
+        border-color: #658352;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(101, 131, 82, 0.1);
+    }
+
+    .modal-content .error-msg {
+        color: #dc3545;
+        font-size: 0.9rem;
+        margin: 8px 0 20px;
+        min-height: 1.2em;
+        font-weight: 500;
+    }
+
+    .modal-content button {
+        padding: 14px 32px;
+        border-radius: 12px;
+        border: none;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-width: 120px;
+        position: relative;
+        overflow: hidden;
+        margin: 7px;
+    }
+
+    .modal-content button::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+
+    .modal-content button:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 30px;
+    }
+
+    #confirmPasswordBtn {
+        background: linear-gradient(135deg, #658352, #5a7347);
+        color: white;
+        box-shadow: 0 4px 15px rgba(101, 131, 82, 0.3);
+    }
+
+    #confirmPasswordBtn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(101, 131, 82, 0.4);
+    }
+
+    .cancel-btn {
+        background: white;
+        color: #6c757d;
+        border: 2px solid #e9ecef !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .cancel-btn:hover {
+        background: #f8f9fa;
+        border-color: #dee2e6 !important;
+        color: #495057;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-content .danger {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+    }
+
+    .modal-content .danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+    }
+
+    /* Warning Modal Specific Styles */
+    .modal-icon.warning {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+        box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+    }
+
+    .modal-content .warning-title {
+        color: #dc3545;
+    }
+
+    .modal-content .warning-text {
+        color: #495057;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .warning-notice {
+        background: linear-gradient(135deg, #fff3cd, #fdf4d2);
+        padding: 20px;
+        border-radius: 12px;
+        margin: 20px 0;
+        border: 1px solid #ffeaa7;
+        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.15);
+    }
+
+    .warning-notice strong {
+        color: #856404;
+        font-size: 1.1rem;
+    }
+
+    .warning-notice p {
+        color: #856404;
+        margin: 10px 0 0 0;
+        font-weight: 500;
+    }
+
+    .warning-content {
+        margin: 15px 0;
+        background-color: #fff5f5;
+        border: 2px solid #fed7d7;
+        border-radius: 8px;
+        padding: 20px;
+    }
+
+    .warning-content ul {
+        margin: 15px 0;
+        padding-left: 20px;
+    }
+
+    .warning-content li {
+        margin-bottom: 12px;
+        color: #2d3748;
+        line-height: 1.5;
+        font-weight: 500;
+        position: relative;
+    }
+
+    .warning-content li:before {
+        content: "⚠️";
+        position: absolute;
+        left: -25px;
+        top: 0;
+    }
+
+    .warning-content strong {
+        color: #dc3545;
+        font-size: 1.1em;
+    }
+
+    #withdrawal-warning-modal .modal-content {
+        max-width: 500px;
+        max-height: none;
+        padding: 30px;
+    }
+
+    #withdrawal-warning-modal .modal-content h2 {
+        color: #dc3545;
+        margin-bottom: 20px;
+        font-size: 1.4rem;
+    }
+
+    #withdrawal-warning-modal .warning-content {
+        margin: 20px 0;
+        background-color: #fff5f5;
+        border: 1px solid #fed7d7;
+        border-radius: 12px;
+        padding: 20px;
+    }
+
+    #withdrawal-warning-modal .warning-content ul {
+        margin: 10px 0;
+        padding-left: 25px;
+    }
+
+    #withdrawal-warning-modal .warning-content li {
+        margin-bottom: 10px;
+        color: #2d3748;
+        line-height: 1.6;
+        font-weight: 500;
+        position: relative;
+    }
+
+    #withdrawal-warning-modal .warning-content li:before {
+        content: "⚠️";
+        position: absolute;
+        left: -30px;
+        top: 0;
+        font-size: 14px;
+    }
+
+    #withdrawal-warning-modal .warning-content strong {
+        color: #dc3545;
+        font-weight: 600;
+    }
+
+    #withdrawal-warning-modal .modal-actions {
+        margin-top: 25px;
+        gap: 12px;
+    }
+
+    #withdrawal-warning-modal .modal-cancel-btn {
+        background: white;
+        color: #6c757d;
+        border: 2px solid #e9ecef;
+        font-weight: 600;
+        padding: 12px 24px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    #withdrawal-warning-modal .modal-cancel-btn:hover {
+        background: #f8f9fa;
+        border-color: #dee2e6;
+        color: #495057;
+        transform: translateY(-1px);
+    }
+
+    #withdrawal-warning-modal .modal-confirm-btn {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+        font-weight: 600;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+    }
+
+    #withdrawal-warning-modal .modal-confirm-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+    }
+  </style>
+</head>
+<body>
+<header class="navbar-container">
+  <div class="navbar">
+    <a href="/home">
+      <img th:src="@{/images/free-icon-sprout-7101338.png}" alt="로고" class="navbar-logo-img"/>
+    </a>
+    <div class="navbar-buttons">
+      <th:block th:if="${session.loginBuyer != null}">
+        <a th:href="@{/buyer/info}" class="user-name" th:text="${session.loginBuyer.nickname}"></a>
+        <a th:href="@{/buyer/cart/{bid}(bid=${session.loginBuyer.buyerId})}" class="btn-outline">장바구니</a>
+      </th:block>
+      <a href="#" onclick="logout()" class="btn-filled">로그아웃</a>
+    </div>
+  </div>
+</header>
+
+<div class="page-wrapper">
+  <div class="order-panel">
+    <button class="panel-button" onclick="location.href='/buyer/info'">마이페이지</button>
+    <button class="panel-button" onclick="location.href='/buyer/orders'">주문 내역</button>
+    <button class="panel-button" onclick="location.href='/buyer/cart/{bid}(bid=${session.loginBuyer.buyerId})'">장바구니</button>
+  </div>
+
+  <div class="account-container">
+    <h2>마이페이지 - 계정 정보</h2>
+
+    <div id="account-info" class="account-info">
+      <p><strong>이메일</strong><span class="colon">:</span><span th:text="${buyer?.email ?: '정보 없음'}">정보 없음</span></p>
+      <p><strong>이름</strong><span class="colon">:</span><span th:text="${buyer?.name ?: '정보 없음'}">정보 없음</span></p>
+      <p><strong>닉네임</strong><span class="colon">:</span><span th:text="${buyer?.nickname ?: '정보 없음'}">정보 없음</span></p>
+      <p><strong>전화번호</strong><span class="colon">:</span><span th:text="${buyer?.tel ?: '정보 없음'}">정보 없음</span></p>
+      <p><strong>성별</strong><span class="colon">:</span><span th:text="${buyer?.gender ?: '정보 없음'}">정보 없음</span></p>
+      <p><strong>생년월일</strong><span class="colon">:</span><span th:text="${birthFormatted ?: '정보 없음'}">정보 없음</span></p>
+      <p><strong>주소</strong><span class="colon">:</span>
+        <span th:if="${buyer?.postNumber != null and parsedAddress != null}">
+                    (<span th:text="${buyer.postNumber}"></span>) <span th:text="${parsedAddress}"></span>
+                    <span th:if="${parsedDetailAddress != null and !#strings.isEmpty(parsedDetailAddress)}" th:text="' ' + ${parsedDetailAddress}"></span>
+                </span>
+        <span th:unless="${buyer?.postNumber != null and parsedAddress != null}">정보 없음</span>
+      </p>
+    </div>
+
+    <div class="account-actions">
+      <button id="editBtn">정보 수정</button>
+      <button id="deleteBtn" type="button">회원 탈퇴</button>
+    </div>
+  </div>
+</div>
+
+<!-- Password Modal -->
+<div id="passwordModal" class="modal">
+  <div class="modal-content">
+    <span class="close-button">&times;</span>
+    <div class="modal-icon security">
+      🔒
+    </div>
+    <h2>보안 인증</h2>
+    <p>개인정보 보호를 위해 현재 비밀번호를 다시 한 번 입력해주세요.</p>
+    <input type="password" id="passwordInput" placeholder="현재 비밀번호를 입력하세요" autocomplete="current-password">
+    <div id="modalErrorMessage" class="error-msg"></div>
+    <div class="modal-actions">
+      <button id="confirmPasswordBtn">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- Withdrawal Warning Modal -->
+<div id="withdrawal-warning-modal" class="modal">
+  <div class="modal-content">
+    <span class="close-button">&times;</span>
+    <div class="modal-icon warning">
+      ⚠️
+    </div>
+    <h2 class="warning-title">회원 탈퇴 안내</h2>
+    <div class="warning-notice">
+      <strong>탈퇴 전 반드시 확인해주세요!</strong>
+      <p>회원 탈퇴 시 아래 사항들이 적용됩니다.</p>
+    </div>
+    <div class="warning-content">
+      <ul>
+        <li><strong>계정 정보 삭제:</strong> 모든 구매자 정보가 영구적으로 삭제됩니다.</li>
+        <li><strong>주문 내역 삭제:</strong> 과거 주문 내역 및 배송 정보가 삭제됩니다.</li>
+        <li><strong>장바구니 삭제:</strong> 저장된 장바구니 상품이 모두 삭제됩니다.</li>
+        <li><strong>복구 불가:</strong> 탈퇴 후에는 모든 정보 복구가 불가능합니다.</li>
+      </ul>
+    </div>
+    <p class="warning-text">정말로 탈퇴하시겠습니까?</p>
+    <div class="modal-actions">
+      <button type="button" class="modal-cancel-btn">취소</button>
+      <button type="button" class="modal-confirm-btn danger">탈퇴하기</button>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+      // --- DOM 요소 ---
+      const passwordModal = document.getElementById('passwordModal');
+      const editBtn = document.getElementById('editBtn');
+      const deleteBtn = document.getElementById('deleteBtn');
+      const passwordInput = document.getElementById('passwordInput');
+      let nextAction = null; // 'edit' or 'delete'
+
+      // --- 함수 ---
+      function openModal(modal) {
+          modal.classList.add('active');
+          if(modal === passwordModal) {
+              passwordInput.value = '';
+              document.getElementById('modalErrorMessage').textContent = '';
+              passwordInput.focus();
+          }
+      }
+
+      function closeModal(modal) {
+          modal.classList.remove('active');
+      }
+
+      async function proceedWithAction() {
+          const password = passwordInput.value.trim();
+          const errorElement = document.getElementById('modalErrorMessage');
+
+          if (!password) {
+              errorElement.textContent = '비밀번호를 입력해주세요.';
+              return;
+          }
+
+          // 서버에서 비밀번호 확인
+          try {
+              const response = await fetch('/buyer/verify-password', {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({ password: password })
+              });
+
+              const result = await response.json();
+
+              if (result.success) {
+                  closeModal(passwordModal);
+                  if (nextAction === 'edit') {
+                      window.location.href = '/buyer/edit';
+                  } else if (nextAction === 'delete') {
+                      // 회원 탈퇴 처리
+                      const form = document.createElement('form');
+                      form.method = 'POST';
+                      form.action = '/buyer/delete';
+
+                      // CSRF 토큰 처리
+                      const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+                      const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+                      if (csrfToken && csrfHeader) {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = '_csrf';
+                        input.value = csrfToken;
+                        form.appendChild(input);
+                      }
+
+                      document.body.appendChild(form);
+                      form.submit();
+                  }
+              } else {
+                  errorElement.textContent = '비밀번호가 틀렸습니다.';
+              }
+          } catch (error) {
+              errorElement.textContent = '서버 오류가 발생했습니다.';
+          }
+      }
+
+      // --- 이벤트 리스너 ---
+      editBtn.addEventListener('click', () => {
+          nextAction = 'edit';
+          openModal(passwordModal);
+      });
+
+    deleteBtn.addEventListener('click', () => {
+      nextAction = 'delete';
+      openModal(document.getElementById('withdrawal-warning-modal'));
+    });
+
+      // 비밀번호 확인 모달 (정보 수정용)
+      passwordModal.querySelector('.close-button').addEventListener('click', () => closeModal(passwordModal));
+      passwordModal.querySelector('#confirmPasswordBtn').addEventListener('click', proceedWithAction);
+      passwordInput.addEventListener('keyup', e => {
+           if (e.key === 'Enter') proceedWithAction();
+      });
+      passwordModal.addEventListener('click', e => {
+          if (e.target === passwordModal) closeModal(passwordModal);
+      });
+
+      // 경고 모달 이벤트 리스너
+      const withdrawalWarningModal = document.getElementById('withdrawal-warning-modal');
+      
+      // 경고 모달의 탈퇴하기 버튼 클릭 시 비밀번호 모달로 이동
+      withdrawalWarningModal.querySelector('.modal-confirm-btn').addEventListener('click', () => {
+        closeModal(withdrawalWarningModal);
+        openModal(passwordModal);
+      });
+
+      // 경고 모달의 취소 버튼 클릭 시 모달 닫기
+      withdrawalWarningModal.querySelector('.modal-cancel-btn').addEventListener('click', () => {
+        closeModal(withdrawalWarningModal);
+      });
+
+      // 경고 모달의 닫기 버튼 클릭 시 모달 닫기
+      withdrawalWarningModal.querySelector('.close-button').addEventListener('click', () => {
+        closeModal(withdrawalWarningModal);
+      });
+
+      // 경고 모달 배경 클릭 시 닫기
+      withdrawalWarningModal.addEventListener('click', e => {
+        if (e.target === withdrawalWarningModal) closeModal(withdrawalWarningModal);
+      });
+  });
+
+  // 로그아웃 기능
+  function logout() {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/buyer/logout';
+    document.body.appendChild(form);
+    form.submit();
+  }
+</script>
+</body>
+</html>

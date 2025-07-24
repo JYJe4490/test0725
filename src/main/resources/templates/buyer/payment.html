@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주문/결제</title>
+    <!-- Daum Postcode API -->
+    <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cabin:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+          --color-primary: #658352;
+          --color-primary-light: #94A687;
+          --color-background: #FBF9EF;
+          --color-text: #1E2203;
+          --color-border: #E9E7DE;
+          --color-white: #fff;
+        }
+        body {
+            font-family: 'Inter', 'Cabin', sans-serif;
+            background-color: var(--color-background);
+            color: var(--color-text);
+            margin: 0;
+            padding: 120px 20px 40px; /* 상단 여백 확보 */
+            box-sizing: border-box;
+        }
+
+        /* --- Navbar Styles --- */
+        .navbar-container {
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            z-index: 1000;
+            position: fixed;
+            justify-content: center;
+            background: var(--color-white);
+            box-shadow: 0 2px 12px 0 rgba(0,0,0,0.06);
+        }
+        .navbar {
+            width: 100%;
+            display: flex;
+            max-width: 1400px;
+            align-items: center;
+            padding: 16px 48px;
+            justify-content: space-between;
+        }
+        .navbar-logo-img {
+            height: 3rem;
+            border-radius: 8px;
+        }
+        .navbar-buttons {
+            gap: 16px;
+            display: flex;
+            align-items: center;
+        }
+        .btn-filled, .btn-outline {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            padding: 10px 24px;
+            border-radius: 24px;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: background .2s, color .2s;
+            cursor: pointer;
+            border: 1px solid var(--color-primary);
+        }
+        .btn-filled {
+            color: var(--color-white);
+            background: var(--color-primary);
+        }
+        .btn-filled:hover {
+            opacity: 0.9;
+        }
+        .btn-outline {
+            color: var(--color-primary);
+            background: transparent;
+        }
+        .btn-outline:hover {
+            background: rgba(101, 131, 82, 0.1);
+        }
+        
+        .user-name {
+            color: var(--color-primary);
+            font-weight: 600;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.2s ease;
+        }
+        .user-name:hover {
+            background-color: var(--color-primary);
+            color: var(--color-white);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(101, 131, 82, 0.3);
+        }
+
+        .payment-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .payment-container h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            color: var(--color-primary);
+            margin-bottom: 40px;
+        }
+        .payment-layout {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+        }
+        .main-content {
+            flex-grow: 1;
+        }
+        .section-box {
+            background-color: var(--color-white);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+        .section-box h2 {
+            font-size: 1.5rem;
+            margin-top: 0;
+            margin-bottom: 25px;
+            color: var(--color-primary);
+            border-bottom: 2px solid var(--color-border);
+            padding-bottom: 15px;
+        }
+        /* Order Items Styles */
+        .order-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--color-border);
+        }
+        .order-item:last-child { border-bottom: none; }
+        .order-item img {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            margin-right: 20px;
+            object-fit: cover;
+        }
+        .order-item .info {
+            flex-grow: 1;
+        }
+        .order-item .name { font-weight: 600; }
+        .order-item .quantity, .order-item .price { color: #555; font-size: 0.95rem; }
+
+        /* Address Form Styles */
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            box-sizing: border-box; /* Important for width 100% */
+        }
+        .postcode-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .postcode-group input { flex-grow: 1; }
+        .postcode-group button {
+            padding: 10px 20px;
+            border: 1px solid var(--color-primary);
+            background-color: var(--color-white);
+            color: var(--color-primary);
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            box-sizing: border-box; /* 높이 맞춤 */
+        }
+        .postcode-group button {
+            width: 130px;
+        }
+        .postcode-group button:hover {
+            background-color: var(--color-primary);
+            color: var(--color-white);
+        }
+
+        /* Payment Method Styles */
+        .payment-options { display: flex; gap: 20px; align-items: center; }
+        .payment-options label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        
+        /* 결제 상세 정보 스타일 */
+        .payment-details {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: var(--color-background);
+            border-radius: 6px;
+            border: 1px solid var(--color-border);
+        }
+        .payment-details p {
+            margin: 0 0 10px;
+        }
+        .payment-details p:last-child {
+            margin-bottom: 0;
+        }
+        .payment-details .card-number-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .payment-details .card-number-group input {
+            flex-grow: 1;
+            text-align: center;
+            padding: 12px;
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        .payment-details .card-number-group span {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--color-text);
+        }
+        
+        /* 카드 입력 필드 스타일 */
+        .card-input {
+            padding: 12px;
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .card-input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 2px rgba(101, 131, 82, 0.2);
+        }
+
+        /* Summary Box Styles */
+        .summary-box {
+            width: 320px;
+            flex-shrink: 0;
+            background-color: var(--color-white);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            position: sticky;
+            top: 40px;
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 1rem;
+        }
+        .summary-row.total {
+            font-weight: bold;
+            font-size: 1.2rem;
+            padding-top: 20px;
+            border-top: 1px solid var(--color-border);
+        }
+        #payBtn {
+            display: block;
+            box-sizing: border-box;
+            text-decoration: none;
+            text-align: center;
+            width: 100%;
+            padding: 15px;
+            border-radius: 24px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            background-color: var(--color-primary);
+            color: var(--color-white);
+            margin-top: 20px;
+            transition: background-color 0.2s;
+        }
+        #payBtn:hover {
+            background-color: var(--color-primary-light);
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+        .modal.active {
+            display: flex;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal-content {
+            background: #fff;
+            padding: 40px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 400px;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-content p {
+            font-size: 20px;
+            font-weight: 500;
+            margin: 0 0 28px 0;
+            color: var(--color-text);
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+        .modal-buttons button {
+            flex-grow: 1;
+            height: 50px;
+            border-radius: 24px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+    </style>
+</head>
+<body>
+    <header class="navbar-container">
+        <div class="navbar">
+            <a th:href="@{/home}">
+                <img th:src="@{/images/free-icon-sprout-7101338.png}" alt="로고" class="navbar-logo-img"/>
+            </a>
+            <div class="navbar-buttons">
+                <th:block th:if="${session.loginBuyer != null}">
+                  <a th:href="@{/buyer/info}" class="user-name" th:text="${session.loginBuyer.nickname}"></a>
+                  <a th:href="@{/buyer/cart/{bid}(bid=${session.loginBuyer.buyerId})}" class="btn-outline">장바구니</a>
+                </th:block>
+                <form th:action="@{/buyer/logout}" method="post" style="display:inline;">
+                  <button type="submit" class="btn-filled">로그아웃</button>
+                </form>
+            </div>
+        </div>
+    </header>
+    <!-- 구매자 ID 숨겨진 input 추가 -->
+    <input type="hidden" id="buyerId" th:value="${session.loginBuyer?.buyerId}">
+    <script th:inline="javascript">
+        // Thymeleaf에서 buyerId를 JavaScript 변수로 설정
+        var currentBuyerId = /*[[${session.loginBuyer?.buyerId}]]*/ null;
+        console.log('Thymeleaf에서 설정된 buyerId:', currentBuyerId);
+    </script>
+    <div class="payment-container">
+        <h1>주문/결제</h1>
+        <form id="paymentForm" method="post">
+            <div class="payment-layout">
+                <main class="main-content">
+                    <section class="section-box">
+                        <h2>주문 상품 정보</h2>
+                        <div id="orderItemsList">
+                            <!-- JavaScript로 동적 렌더링 -->
+                        </div>
+                    </section>
+                    <section class="section-box">
+                        <h2>배송지 정보</h2>
+                        <div class="form-group">
+                            <label for="recipientName">받는 분</label>
+                            <input type="text" id="recipientName" name="recipientName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="recipientPhone">연락처</label>
+                            <input type="text" id="recipientPhone" name="recipientPhone" placeholder="'-' 없이 숫자만 입력" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="postcode">우편번호</label>
+                            <div class="postcode-group">
+                                <input type="text" id="postcode" name="postcode" readonly>
+                                <button type="button" id="searchPostcodeBtn">주소 검색</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="address">주소</label>
+                            <input type="text" id="address" name="address" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="detailAddress">상세주소</label>
+                            <input type="text" id="detailAddress" name="detailAddress" placeholder="상세주소를 입력하세요">
+                        </div>
+                    </section>
+                    <section class="section-box">
+                        <h2>결제 수단</h2>
+                        <div class="payment-options">
+                            <label><input type="radio" name="paymentMethod" value="bank" checked> 무통장 입금</label>
+                            <label><input type="radio" name="paymentMethod" value="card"> 카드 결제</label>
+                        </div>
+                        
+                        <!-- 무통장 입금 정보 -->
+                        <div id="bankPaymentInfo" class="payment-details">
+                            <h3>입금 계좌 정보</h3>
+                            <p><strong>농협은행:</strong> 123-456789-01-234 (예금주: 농산물직거래플랫폼)</p>
+                            <p><strong>신한은행:</strong> 110-123-456789 (예금주: 농산물직거래플랫폼)</p>
+                            <p><strong>국민은행:</strong> 123456-01-234567 (예금주: 농산물직거래플랫폼)</p>
+                            <p style="color: #dc3545; font-weight: bold; margin-top: 15px;">
+                                ※ 입금자명을 주문자명과 동일하게 입력해주세요.
+                            </p>
+                        </div>
+                        
+                        <!-- 카드 결제 정보 -->
+                        <div id="cardPaymentInfo" class="payment-details" style="display: none;">
+                            <h3>카드 정보 입력</h3>
+                            <div class="form-group">
+                                <label for="cardNumber">카드번호</label>
+                                <div class="card-number-group">
+                                    <input type="text" id="cardNumber1" maxlength="4" placeholder="1234" class="card-input">
+                                    <span>-</span>
+                                    <input type="text" id="cardNumber2" maxlength="4" placeholder="5678" class="card-input">
+                                    <span>-</span>
+                                    <input type="text" id="cardNumber3" maxlength="4" placeholder="9012" class="card-input">
+                                    <span>-</span>
+                                    <input type="text" id="cardNumber4" maxlength="4" placeholder="3456" class="card-input">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="cardExpiry">유효기간</label>
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <input type="text" id="cardExpiryMonth" maxlength="2" placeholder="MM" style="width: 60px;" class="card-input">
+                                    <span>/</span>
+                                    <input type="text" id="cardExpiryYear" maxlength="2" placeholder="YY" style="width: 60px;" class="card-input">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="cardCVC">CVC</label>
+                                <input type="text" id="cardCVC" maxlength="3" placeholder="123" style="width: 100px;" class="card-input">
+                            </div>
+                            <div class="form-group">
+                                <label for="cardPassword">카드 비밀번호</label>
+                                <input type="password" id="cardPassword" maxlength="4" placeholder="****" style="width: 100px;" class="card-input">
+                            </div>
+                        </div>
+                    </section>
+                </main>
+                <aside class="summary-box">
+                    <h2>최종 결제 금액</h2>
+                    <div class="summary-row">
+                        <span>총 상품 금액</span>
+                        <span id="summarySubtotal">0원</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>배송비</span>
+                        <span id="summaryShipping">0원</span>
+                    </div>
+                    <hr>
+                    <div class="summary-row total">
+                        <span>결제 예정 금액</span>
+                        <span id="summaryTotal">0원</span>
+                    </div>
+                    <button type="submit" id="payBtn">결제하기</button>
+                </aside>
+            </div>
+        </form>
+    </div>
+    
+    <!-- 주문 완료 모달 -->
+    <div id="orderCompleteModal" class="modal">
+        <div class="modal-content">
+            <p>주문이 완료되었습니다!</p>
+            <div class="modal-buttons">
+                <button onclick="goToPaymentComplete()" style="background-color: var(--color-primary); color: #fff; border: none;">주문 완료 페이지로</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 구매자 ID 가져오기
+            let buyerId = sessionStorage.getItem('buyerId');
+            console.log('세션 스토리지 buyerId:', buyerId);
+            
+            // 세션 스토리지의 buyerId가 유효하지 않으면 제거
+            if (buyerId && (buyerId === '[object HTMLInputElement]' || typeof buyerId === 'object')) {
+                console.log('세션 스토리지의 buyerId가 유효하지 않음, 제거함');
+                sessionStorage.removeItem('buyerId');
+                buyerId = null;
+            }
+            
+            if (!buyerId) {
+                // Thymeleaf에서 설정된 buyerId 사용
+                buyerId = currentBuyerId;
+                console.log('Thymeleaf에서 가져온 buyerId:', buyerId);
+            }
+            
+            console.log('최종 buyerId:', buyerId, '타입:', typeof buyerId);
+            
+            if (!buyerId) {
+                alert('로그인 정보가 없습니다.');
+                window.location.href = '/buyer/login';
+                return;
+            }
+            
+            // 세션 스토리지에서 주문 정보 가져오기
+            const orderFormData = sessionStorage.getItem('orderForm');
+            if (!orderFormData) {
+                alert('주문 정보가 없습니다. 장바구니로 돌아갑니다.');
+                window.location.href = '/buyer/cart';
+                return;
+            }
+            
+            const orderForm = JSON.parse(orderFormData);
+            
+            // 매진 상품 체크
+            checkSoldOutProducts(orderForm.items)
+                .then(soldOutProducts => {
+                    if (soldOutProducts.length > 0) {
+                        alert('매진된 상품이 포함되어 있습니다. 장바구니를 확인해주세요.');
+                        window.location.href = '/buyer/cart/' + buyerId;
+                        return;
+                    }
+                    
+                    // 주문 상품 목록 렌더링
+                    renderOrderItems(orderForm.items);
+                    
+                    // 결제 금액 업데이트
+                    updatePaymentSummary(orderForm);
+                })
+                .catch(error => {
+                    console.error('매진 상품 체크 중 오류:', error);
+                    alert('상품 재고 확인 중 오류가 발생했습니다.');
+                    window.location.href = '/buyer/cart/' + buyerId;
+                });
+            
+            // Daum Postcode API
+            document.getElementById('searchPostcodeBtn').addEventListener('click', () => {
+                new daum.Postcode({
+                    oncomplete: function(data) {
+                        document.getElementById('postcode').value = data.zonecode;
+                        document.getElementById('address').value = data.address;
+                        document.getElementById('detailAddress').focus();
+                    }
+                }).open();
+            });
+
+            // 연락처 자동 하이픈
+            const phoneInput = document.getElementById('recipientPhone');
+            phoneInput.addEventListener('input', (e) => {
+                let value = e.target.value.replace(/\D/g, '');
+                const length = value.length;
+                let result = '';
+                if (length < 4) {
+                    result = value;
+                } else if (value.startsWith('02')) { // 서울 지역번호
+                    if (length < 7) {
+                        result = `${value.slice(0, 2)}-${value.slice(2)}`;
+                    } else if (length < 11) {
+                        result = `${value.slice(0, 2)}-${value.slice(2, 6)}-${value.slice(6)}`;
+                    } else {
+                        result = `${value.slice(0, 2)}-${value.slice(2, 6)}-${value.slice(6, 10)}`;
+                    }
+                } else { // 그 외 휴대폰 및 지역번호
+                    if (length < 8) {
+                        result = `${value.slice(0, 3)}-${value.slice(3)}`;
+                    } else if (length < 12) {
+                        result = `${value.slice(0, 3)}-${value.slice(3, 7)}-${value.slice(7)}`;
+                    } else {
+                        result = `${value.slice(0, 3)}-${value.slice(3, 7)}-${value.slice(7, 11)}`;
+                    }
+                }
+                e.target.value = result;
+            });
+            
+            // 결제 수단 변경 이벤트
+            const paymentMethodRadios = document.querySelectorAll('input[name="paymentMethod"]');
+            const bankPaymentInfo = document.getElementById('bankPaymentInfo');
+            const cardPaymentInfo = document.getElementById('cardPaymentInfo');
+            
+            paymentMethodRadios.forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    if (e.target.value === 'bank') {
+                        bankPaymentInfo.style.display = 'block';
+                        cardPaymentInfo.style.display = 'none';
+                    } else if (e.target.value === 'card') {
+                        bankPaymentInfo.style.display = 'none';
+                        cardPaymentInfo.style.display = 'block';
+                    }
+                });
+            });
+            
+            // 카드번호 자동 포커스 이동
+            const cardNumberInputs = [
+                document.getElementById('cardNumber1'),
+                document.getElementById('cardNumber2'),
+                document.getElementById('cardNumber3'),
+                document.getElementById('cardNumber4')
+            ];
+            
+            cardNumberInputs.forEach((input, index) => {
+                if (input) {
+                    input.addEventListener('input', (e) => {
+                        if (e.target.value.length === 4 && index < 3) {
+                            cardNumberInputs[index + 1].focus();
+                        }
+                    });
+                    
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Backspace' && e.target.value.length === 0 && index > 0) {
+                            cardNumberInputs[index - 1].focus();
+                        }
+                    });
+                }
+            });
+            
+            // 숫자만 입력 가능하도록 설정
+            const numericInputs = [
+                ...cardNumberInputs,
+                document.getElementById('cardExpiryMonth'),
+                document.getElementById('cardExpiryYear'),
+                document.getElementById('cardCVC'),
+                document.getElementById('cardPassword')
+            ];
+            
+            numericInputs.forEach(input => {
+                if (input) {
+                    input.addEventListener('input', (e) => {
+                        e.target.value = e.target.value.replace(/\D/g, '');
+                    });
+                }
+            });
+            
+            // 폼 제출 시 주문 정보와 함께 전송
+            document.getElementById('paymentForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // 결제 수단에 따른 검증
+                const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+                
+                if (paymentMethod === 'card') {
+                    // 카드 정보 검증
+                    const cardNumber1 = document.getElementById('cardNumber1').value;
+                    const cardNumber2 = document.getElementById('cardNumber2').value;
+                    const cardNumber3 = document.getElementById('cardNumber3').value;
+                    const cardNumber4 = document.getElementById('cardNumber4').value;
+                    const cardExpiryMonth = document.getElementById('cardExpiryMonth').value;
+                    const cardExpiryYear = document.getElementById('cardExpiryYear').value;
+                    const cardCVC = document.getElementById('cardCVC').value;
+                    const cardPassword = document.getElementById('cardPassword').value;
+                    
+                    if (!cardNumber1 || !cardNumber2 || !cardNumber3 || !cardNumber4) {
+                        alert('카드번호를 모두 입력해주세요.');
+                        return;
+                    }
+                    
+                    if (!cardExpiryMonth || !cardExpiryYear) {
+                        alert('카드 유효기간을 입력해주세요.');
+                        return;
+                    }
+                    
+                    if (!cardCVC) {
+                        alert('CVC를 입력해주세요.');
+                        return;
+                    }
+                    
+                    if (!cardPassword) {
+                        alert('카드 비밀번호를 입력해주세요.');
+                        return;
+                    }
+                    
+                    // 유효기간 검증 (간단한 형식 검증)
+                    const month = parseInt(cardExpiryMonth);
+                    const year = parseInt(cardExpiryYear);
+                    
+                    if (month < 1 || month > 12) {
+                        alert('유효한 월을 입력해주세요 (01-12).');
+                        return;
+                    }
+                    
+                    if (year < 0 || year > 99) {
+                        alert('유효한 연도를 입력해주세요 (00-99).');
+                        return;
+                    }
+                }
+                
+                // 폼 데이터 수집
+                const formData = new FormData(this);
+                
+                // OrderForm 형식에 맞게 데이터 구성
+                const orderFormData = {
+                    buyerId: null, // 세션에서 가져올 예정
+                    name: formData.get('recipientName'),
+                    tel: formData.get('recipientPhone'),
+                    deliveryAddress: formData.get('postcode') + ' ' + formData.get('address') + ' ' + formData.get('detailAddress'),
+                    totalPrice: orderForm.totalPrice + orderForm.totalDeliveryFee,
+                    items: orderForm.items.map(item => ({
+                        productId: item.productId,
+                        quantity: item.quantity,
+                        unitPrice: Math.floor(item.totalPrice / item.quantity), // 정수로 변환
+                        totalPrice: item.totalPrice,
+                        deliveryCompany: null,
+                        trackingNumber: null
+                    }))
+                };
+                
+                console.log('전송할 데이터:', orderFormData); // 디버깅용
+                
+                // 주문 처리 API 호출
+                fetch('/api/order/cart', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderFormData)
+                })
+                .then(response => {
+                    console.log('API 응답 상태:', response.status); // 디버깅용
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('API 응답 데이터:', data); // 디버깅용
+                    if (data.header && data.header.rtcd === 'S00') {
+                        console.log('주문 성공! 장바구니 업데이트 시작...');
+                        
+                        // 주문 완료 후 장바구니 상품들의 is_checked를 'Y'로 업데이트
+                        updateCartItemsChecked(orderForm.items, buyerId)
+                            .then(() => {
+                                console.log('장바구니 업데이트 완료!');
+                                // 업데이트 결과 확인
+                                checkCartUpdateResult(buyerId);
+                                
+                                // 결제 완료된 상품들을 장바구니에서 삭제
+                                deleteCompletedItems(buyerId)
+                                    .then(() => {
+                                        console.log('결제 완료 상품 삭제 완료!');
+                                        // 모달 표시
+                                        document.getElementById('orderCompleteModal').classList.add('active');
+                                    })
+                                    .catch(error => {
+                                        console.error('결제 완료 상품 삭제 실패:', error);
+                                        // 모달 표시
+                                        document.getElementById('orderCompleteModal').classList.add('active');
+                                    });
+                            })
+                            .catch(error => {
+                                console.error('장바구니 업데이트 실패:', error);
+                                // 모달 표시
+                                document.getElementById('orderCompleteModal').classList.add('active');
+                            });
+                    } else {
+                        console.error('API 오류:', data);
+                        alert('주문 처리 중 오류가 발생했습니다. 응답: ' + (data.header ? data.header.rtmsg : '알 수 없는 오류'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Order Error:', error);
+                    alert('주문 처리 중 오류가 발생했습니다. 네트워크 오류를 확인해주세요.');
+                });
+            });
+        });
+        
+        // 주문 상품 목록 렌더링
+        function renderOrderItems(items) {
+            const orderItemsList = document.getElementById('orderItemsList');
+            orderItemsList.innerHTML = '';
+            
+            items.forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'order-item';
+                itemElement.innerHTML = `
+                    <input type="hidden" name="productId" value="${item.productId}" />
+                    <input type="hidden" name="quantity" value="${item.quantity}" />
+                    <img src="${item.productThumbnail || '/images/product-placeholder.jpg'}" alt="${item.productTitle || '상품 이미지'}">
+                    <div class="info">
+                        <p class="name">${item.productTitle || `상품 ID: ${item.productId}`}</p>
+                        <p class="quantity">수량: ${item.quantity}개</p>
+                    </div>
+                    <p class="price">${formatNumber(item.totalPrice)}원</p>
+                `;
+                orderItemsList.appendChild(itemElement);
+            });
+        }
+        
+        // 결제 금액 업데이트
+        function updatePaymentSummary(orderForm) {
+            document.getElementById('summarySubtotal').textContent = formatNumber(orderForm.totalPrice) + '원';
+            document.getElementById('summaryShipping').textContent = formatNumber(orderForm.totalDeliveryFee) + '원';
+            document.getElementById('summaryTotal').textContent = formatNumber(orderForm.totalPrice + orderForm.totalDeliveryFee) + '원';
+        }
+        
+        // 숫자 포맷
+        function formatNumber(num) {
+            return num.toLocaleString();
+        }
+        
+        // 장바구니 상품들의 is_checked를 'Y'로 업데이트
+        async function updateCartItemsChecked(items, buyerId) {
+            console.log('=== updateCartItemsChecked 시작 ===');
+            console.log('주문된 아이템들:', items);
+            console.log('구매자 ID:', buyerId);
+            
+            if (!buyerId) {
+                console.error('구매자 ID가 없습니다.');
+                return;
+            }
+            
+            try {
+                // 장바구니 데이터 가져오기
+                const response = await fetch(`/api/cart/${buyerId}`);
+                console.log('장바구니 API 응답 상태:', response.status);
+                
+                const data = await response.json();
+                console.log('장바구니 API 응답 데이터:', data);
+                
+                if (data.header && data.header.rtcd === 'S00' && data.body && data.body.length > 0) {
+                    const cartItems = data.body;
+                    console.log('전체 장바구니 아이템들:', cartItems);
+                    
+                    // 주문된 상품들의 cartId 찾기
+                    const cartIdsToUpdate = [];
+                    
+                    items.forEach(orderItem => {
+                        console.log('처리 중인 주문 아이템:', orderItem);
+                        
+                        // productId로 일치하는 장바구니 아이템 찾기
+                        const matchingCartItems = cartItems.filter(cart => 
+                            cart.productId === orderItem.productId
+                        );
+                        
+                        console.log('일치하는 장바구니 아이템들:', matchingCartItems);
+                        
+                        // is_checked가 'Y'가 아닌 아이템들만 선택
+                        matchingCartItems.forEach(cartItem => {
+                            if (cartItem.isChecked !== 'Y') {
+                                cartIdsToUpdate.push(cartItem.cartId);
+                                console.log('업데이트 대상 cartId 추가:', cartItem.cartId);
+                            }
+                        });
+                    });
+                    
+                    console.log('최종 업데이트할 cartIds:', cartIdsToUpdate);
+                    
+                    if (cartIdsToUpdate.length > 0) {
+                        // 모든 업데이트를 병렬로 실행
+                        const updatePromises = cartIdsToUpdate.map(async (cartId) => {
+                            console.log('업데이트 요청 보내는 cartId:', cartId);
+                            
+                            try {
+                                const updateResponse = await fetch('/api/cart/check', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ cartId: cartId })
+                                });
+                                
+                                console.log(`Cart ${cartId} 업데이트 응답 상태:`, updateResponse.status);
+                                const result = await updateResponse.json();
+                                console.log(`Cart ${cartId} 업데이트 결과:`, result);
+                                
+                                if (result.header && result.header.rtcd === 'S00') {
+                                    console.log(`Cart ${cartId} 성공적으로 업데이트됨`);
+                                    return { cartId, success: true };
+                                } else {
+                                    console.error(`Cart ${cartId} 업데이트 실패:`, result);
+                                    return { cartId, success: false, error: result };
+                                }
+                            } catch (error) {
+                                console.error(`Cart ${cartId} 업데이트 중 오류:`, error);
+                                return { cartId, success: false, error: error };
+                            }
+                        });
+                        
+                        // 모든 업데이트 완료 대기
+                        const results = await Promise.all(updatePromises);
+                        console.log('모든 cart 업데이트 결과:', results);
+                        
+                        const successCount = results.filter(r => r.success).length;
+                        const failCount = results.filter(r => !r.success).length;
+                        
+                        console.log(`업데이트 완료: 성공 ${successCount}개, 실패 ${failCount}개`);
+                        
+                    } else {
+                        console.log('업데이트할 cartId가 없습니다.');
+                    }
+                } else {
+                    console.error('장바구니 데이터를 가져올 수 없습니다:', data);
+                }
+            } catch (error) {
+                console.error('장바구니 업데이트 중 오류:', error);
+            }
+        }
+        
+        // 장바구니 업데이트 결과 확인
+        function checkCartUpdateResult(buyerId) {
+            console.log('=== 장바구니 업데이트 결과 확인 ===');
+            
+            fetch(`/api/cart/${buyerId}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('업데이트 후 장바구니 상태:', data);
+                    if (data.header && data.header.rtcd === 'S00' && data.body) {
+                        const cartItems = data.body;
+                        const checkedItems = cartItems.filter(item => item.isChecked === 'Y');
+                        const uncheckedItems = cartItems.filter(item => item.isChecked !== 'Y');
+                        
+                        console.log('is_checked = Y인 아이템들:', checkedItems);
+                        console.log('is_checked != Y인 아이템들:', uncheckedItems);
+                    }
+                })
+                .catch(error => {
+                    console.error('업데이트 결과 확인 중 오류:', error);
+                });
+        }
+        
+        // 주문 완료 페이지로 이동하는 함수
+        function goToPaymentComplete() {
+            window.location.href = '/buyer/payment_complete';
+        }
+        
+        // 매진 상품 체크 함수
+        async function checkSoldOutProducts(items) {
+            const productIds = items.map(item => item.productId);
+            
+            try {
+                const response = await fetch('/api/cart/check-stock', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(productIds)
+                });
+                
+                const data = await response.json();
+                
+                if (data.header && data.header.rtcd === 'S00') {
+                    return data.body || [];
+                } else {
+                    console.error('매진 상품 체크 실패:', data);
+                    return [];
+                }
+            } catch (error) {
+                console.error('매진 상품 체크 중 오류:', error);
+                return [];
+            }
+        }
+        
+        // 결제 완료된 상품 삭제
+        async function deleteCompletedItems(buyerId) {
+            console.log('결제 완료된 상품 삭제 시작: buyerId=', buyerId);
+            
+            try {
+                const response = await fetch('/api/cart/delete-completed', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(parseInt(buyerId))
+                });
+
+                const data = await response.json();
+                
+                if (data.header && data.header.rtcd === 'S00') {
+                    console.log('결제 완료된 상품 삭제 성공:', data.body);
+                    return data.body;
+                } else {
+                    console.error('결제 완료된 상품 삭제 실패:', data);
+                    throw new Error(data.body || '삭제 실패');
+                }
+            } catch (error) {
+                console.error('결제 완료 상품 삭제 중 오류:', error);
+                throw error;
+            }
+        }
+    </script>
+</body>
+</html> 

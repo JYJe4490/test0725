@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>전체 주문 내역</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cabin:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-primary: #658352;
+      --color-primary-light: #94A687;
+      --color-background: #FBF9EF;
+      --color-text: #1E2203;
+      --color-white: #fff;
+      --layout-max-width: 1400px;
+    }
+    /* --- Navbar Styles --- */
+    .navbar-container {
+        top: 0;
+        left: 0;
+        width: 100%;
+        display: flex;
+        z-index: 1000;
+        position: fixed;
+        justify-content: center;
+        background: var(--color-white);
+        box-shadow: 0 2px 12px 0 rgba(0,0,0,0.06);
+    }
+    .navbar {
+        width: 100%;
+        display: flex;
+        max-width: var(--layout-max-width);
+        align-items: center;
+        padding: 16px 48px;
+        justify-content: space-between;
+    }
+    .navbar-logo-img {
+        height: 3rem;
+        border-radius: 8px;
+    }
+    .navbar-buttons {
+        gap: 16px;
+        display: flex;
+        align-items: center;
+    }
+    .btn-filled, .btn-outline {
+        display: flex;
+        align-items: center;
+        font-weight: bold;
+        padding: 10px 24px;
+        border-radius: 24px;
+        font-size: 1rem;
+        text-decoration: none;
+        transition: background .2s, color .2s;
+        cursor: pointer;
+        border: 1px solid var(--color-primary);
+    }
+    .btn-filled {
+        color: var(--color-white);
+        background: var(--color-primary);
+    }
+    .btn-filled:hover {
+        opacity: 0.9;
+    }
+    .btn-outline {
+        color: var(--color-primary);
+        background: transparent;
+    }
+    .btn-outline:hover {
+        background: rgba(101, 131, 82, 0.1);
+    }
+    
+    .user-name {
+        color: var(--color-primary);
+        font-weight: 600;
+        text-decoration: none;
+        padding: 8px 16px;
+        border-radius: 20px;
+        transition: all 0.2s ease;
+    }
+    .user-name:hover {
+        background-color: var(--color-primary);
+        color: var(--color-white);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(101, 131, 82, 0.3);
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', 'Cabin', sans-serif;
+      background: #FBF9EF;
+      color: #1E2203;
+      padding: 120px 20px 40px;
+      box-sizing: border-box;
+    }
+    .page-wrapper {
+      display: flex;
+      align-items: stretch;
+      gap: 24px;
+      width: 1200px;
+      height: 700px;
+      margin: 0 auto;
+      flex-wrap: nowrap;
+    }
+    .order-panel {
+      background: #fff;
+      padding: 20px 24px;
+      border-radius: 20px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      width: 180px;
+      height: 650px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 32px;
+      box-sizing: border-box;
+    }
+    .panel-button {
+      width: 150px;
+      padding: 12px 0;
+      font-size: 0.95rem;
+      font-weight: bold;
+      border-radius: 24px;
+      border: 1px solid #658352;
+      background: #658352;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .panel-button:hover {
+      background: #94A687;
+      color: #F5F4ED;
+    }
+    .page-container {
+      background: #fff;
+      padding: 20px 40px;
+      border-radius: 20px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      width: 996px;
+      height: 100%;
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
+    h2 {
+      font-family: 'Cabin', sans-serif;
+      font-weight: 700;
+      color: #658352;
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 2.5rem;
+    }
+    .order-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .order-item {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .order-item:hover {
+      background-color: #f8f9fa;
+    }
+    .order-item:last-child {
+      border-bottom: none;
+    }
+    .order-main {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      width: 100%;
+    }
+    .order-products {
+      display: none;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+      width: 100%;
+    }
+    .order-products.expanded {
+      display: block;
+    }
+    .product-item {
+      display: flex;
+      gap: 15px;
+      padding: 15px;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      background-color: #fafafa;
+    }
+    .product-item:last-child {
+      margin-bottom: 0;
+    }
+    .product-item-image {
+      width: 80px;
+      height: 80px;
+      border-radius: 6px;
+      object-fit: cover;
+      background-color: #eee;
+      flex-shrink: 0;
+    }
+    .product-item-details {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .product-item-name {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #333;
+    }
+    .product-item-info {
+      font-size: 0.9rem;
+      color: #666;
+    }
+    .expand-icon {
+      margin-left: auto;
+      font-size: 1.2rem;
+      color: #658352;
+      transition: transform 0.3s;
+    }
+    .expand-icon.expanded {
+      transform: rotate(180deg);
+    }
+    .product-image {
+      width: 120px;
+      height: 120px;
+      border-radius: 8px;
+      object-fit: cover;
+      background-color: #eee;
+      flex-shrink: 0;
+    }
+    .order-details {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 120px; /* 이미지 높이와 맞춤 */
+    }
+    .order-details .product-name {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin: 0 0 8px 0;
+    }
+    .order-details .seller-name {
+      font-size: 0.95rem;
+      color: #555;
+      margin: 0 0 12px 0;
+    }
+    .order-details .price-quantity {
+      font-size: 1rem;
+      color: #333;
+      margin: 0 0 8px 0;
+      font-weight: 500;
+    }
+    .order-details .order-info {
+      font-size: 0.85rem;
+      color: #777;
+      margin-top: auto; /* 하단에 고정 */
+    }
+    .order-status {
+      align-self: flex-start;
+      padding: 5px 10px;
+      border-radius: 16px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      color: #fff;
+    }
+    .status-completed { background-color: #658352; }
+    .status-shipping { background-color: #3498db; }
+    .status-cancelled { background-color: #e74c3c; }
+
+    @media (max-width: 600px) {
+      .order-item {
+        flex-direction: column;
+      }
+      .product-image {
+        width: 100%;
+        height: 180px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="navbar-container">
+    <div class="navbar">
+        <a th:href="@{/home}">
+            <img th:src="@{/images/free-icon-sprout-7101338.png}" alt="로고" class="navbar-logo-img"/>
+        </a>
+        <div class="navbar-buttons">
+            <th:block th:if="${session.loginBuyer != null}">
+              <a th:href="@{/buyer/info}" class="user-name" th:text="${session.loginBuyer.nickname}"></a>
+              <a th:href="@{/buyer/cart/{bid}(bid=${session.loginBuyer.buyerId})}" class="btn-outline">장바구니</a>
+            </th:block>
+            <form th:action="@{/buyer/logout}" method="post" style="display:inline;">
+              <button type="submit" class="btn-filled">로그아웃</button>
+            </form>
+        </div>
+    </div>
+  </header>
+
+  <h2 class="page-title">주문 내역</h2>
+
+  <div class="page-wrapper">
+    <div class="order-panel">
+      <button class="panel-button" th:onclick="|location.href='@{/buyer/info}'|">마이페이지</button>
+      <button class="panel-button" th:onclick="|location.href='@{/buyer/orders}'|">주문내역</button>
+      <button class="panel-button" th:onclick="|location.href='@{/buyer/cart/{bid}(bid=${session.loginBuyer.buyerId})}'|">장바구니</button>
+    </div>
+
+    <div class="page-container">
+      <div class="order-list" id="orderList">
+        <!-- JavaScript로 동적 렌더링 -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      loadOrderHistory();
+    });
+
+    // 주문 내역 로드
+    function loadOrderHistory() {
+      fetch('/api/order/list')
+        .then(response => response.json())
+        .then(data => {
+          console.log('주문 내역 응답:', data);
+          if (data.header && data.header.rtcd === 'S00' && data.body && data.body.list) {
+            renderOrderHistory(data.body.list);
+          } else {
+            document.getElementById('orderList').innerHTML = 
+              '<div style="text-align: center; padding: 50px 0; color: #888;">주문 내역이 없습니다.</div>';
+          }
+        })
+        .catch(error => {
+          console.error('주문 내역 로드 오류:', error);
+          document.getElementById('orderList').innerHTML = 
+            '<div style="text-align: center; padding: 50px 0; color: #888;">주문 내역을 불러오는 중 오류가 발생했습니다.</div>';
+        });
+    }
+
+    // 주문 내역 렌더링
+    function renderOrderHistory(orders) {
+      const orderList = document.getElementById('orderList');
+      orderList.innerHTML = '';
+
+      if (!orders || orders.length === 0) {
+        orderList.innerHTML = 
+          '<div style="text-align: center; padding: 50px 0; color: #888;">주문 내역이 없습니다.</div>';
+        return;
+      }
+
+      orders.forEach(order => {
+        const orderElement = document.createElement('div');
+        orderElement.className = 'order-item';
+        
+        // 주문 상태에 따른 클래스와 텍스트 설정
+        let statusClass = 'status-cancelled';
+        let statusText = '주문 취소';
+        
+        if (order.orderStatus === '결제완료') {
+          statusClass = 'status-completed';
+          statusText = '결제 완료';
+        } else if (order.orderStatus === '배송중') {
+          statusClass = 'status-shipping';
+          statusText = '배송중';
+        } else if (order.orderStatus === '배송완료') {
+          statusClass = 'status-completed';
+          statusText = '배송 완료';
+        }
+
+        // 주문 상품 정보 가져오기
+        loadOrderItems(order.orderId, orderElement, order, statusClass, statusText);
+      });
+    }
+
+    // 주문 상품 정보 로드
+    function loadOrderItems(orderId, orderElement, order, statusClass, statusText) {
+      fetch(`/api/order/detail?orderId=${orderId}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.header && data.header.rtcd === 'S00' && data.body && data.body.items) {
+            const items = data.body.items;
+            if (items.length > 0) {
+              // 첫 번째 상품의 정보로 메인 이미지 표시
+              const firstItem = items[0];
+              
+              // product 테이블에서 첫 번째 상품 정보 가져오기
+              fetch(`/seller/api/product/${firstItem.productId}`)
+                .then(response => response.json())
+                .then(productData => {
+                  let thumbnail = '/images/product-placeholder.jpg';
+                  let productTitle = `상품 ID: ${firstItem.productId}`;
+                  
+                  if (productData.header && productData.header.rtcd === 'S00' && productData.body) {
+                    thumbnail = productData.body.thumbnail || '/images/product-placeholder.jpg';
+                    productTitle = productData.body.title || `상품 ID: ${firstItem.productId}`;
+                  }
+                  
+                  // 메인 주문 정보 렌더링
+                  orderElement.innerHTML = `
+                    <div class="order-main">
+                      <img class="product-image" src="${thumbnail}" alt="${productTitle}">
+                      <div class="order-details">
+                        <div class="product-name">${productTitle}</div>
+                        <div class="seller-name">수령자: ${order.name}</div>
+                        <div class="price-quantity">주문일: ${formatDate(order.orderDate)} | ${items.length}개 상품</div>
+                        <div class="order-info">주소: ${order.deliveryAddress}</div>
+                      </div>
+                      <div class="order-status ${statusClass}">${statusText}</div>
+                      <div class="expand-icon">▼</div>
+                    </div>
+                    <div class="order-products" data-order-id="${orderId}">
+                      <!-- 상품 목록이 여기에 동적으로 추가됩니다 -->
+                    </div>
+                  `;
+                  
+                  // 상품 목록 렌더링
+                  renderProductList(items, orderElement.querySelector('.order-products'));
+                  
+                  // 클릭 이벤트 추가
+                  orderElement.addEventListener('click', function() {
+                    const productsContainer = this.querySelector('.order-products');
+                    const expandIcon = this.querySelector('.expand-icon');
+                    
+                    productsContainer.classList.toggle('expanded');
+                    expandIcon.classList.toggle('expanded');
+                  });
+                  
+                  document.getElementById('orderList').appendChild(orderElement);
+                })
+                .catch(error => {
+                  console.error('상품 정보 로드 오류:', error);
+                  renderFallbackOrder(orderElement, order, statusClass, statusText, items.length);
+                });
+            } else {
+              renderFallbackOrder(orderElement, order, statusClass, statusText, 0);
+            }
+          } else {
+            renderFallbackOrder(orderElement, order, statusClass, statusText, 0);
+          }
+        })
+        .catch(error => {
+          console.error('주문 상품 정보 로드 오류:', error);
+          renderFallbackOrder(orderElement, order, statusClass, statusText, 0);
+        });
+    }
+
+    // 상품 목록 렌더링
+    function renderProductList(items, container) {
+      items.forEach(item => {
+        fetch(`/seller/api/product/${item.productId}`)
+          .then(response => response.json())
+          .then(productData => {
+            let thumbnail = '/images/product-placeholder.jpg';
+            let productTitle = `상품 ID: ${item.productId}`;
+            
+            if (productData.header && productData.header.rtcd === 'S00' && productData.body) {
+              thumbnail = productData.body.thumbnail || '/images/product-placeholder.jpg';
+              productTitle = productData.body.title || `상품 ID: ${item.productId}`;
+            }
+            
+            const productElement = document.createElement('div');
+            productElement.className = 'product-item';
+            productElement.innerHTML = `
+              <img class="product-item-image" src="${thumbnail}" alt="${productTitle}">
+              <div class="product-item-details">
+                <div class="product-item-name">${productTitle}</div>
+                <div class="product-item-info">수량: ${item.quantity}개 | 가격: ${item.unitPrice.toLocaleString()}원</div>
+              </div>
+            `;
+            
+            // 상품 클릭 시 상품 상세 페이지로 이동
+            productElement.addEventListener('click', function(e) {
+              e.stopPropagation(); // 부모 클릭 이벤트 전파 방지
+              window.location.href = `/product/${item.productId}`;
+            });
+            
+            container.appendChild(productElement);
+          })
+          .catch(error => {
+            console.error('상품 정보 로드 오류:', error);
+            const productElement = document.createElement('div');
+            productElement.className = 'product-item';
+            productElement.innerHTML = `
+              <img class="product-item-image" src="/images/product-placeholder.jpg" alt="상품 이미지">
+              <div class="product-item-details">
+                <div class="product-item-name">상품 ID: ${item.productId}</div>
+                <div class="product-item-info">수량: ${item.quantity}개 | 가격: ${item.unitPrice.toLocaleString()}원</div>
+              </div>
+            `;
+            container.appendChild(productElement);
+          });
+      });
+    }
+
+    // 폴백 주문 렌더링
+    function renderFallbackOrder(orderElement, order, statusClass, statusText, itemCount) {
+      orderElement.innerHTML = `
+        <div class="order-main">
+          <img class="product-image" src="/images/product-placeholder.jpg" alt="상품 이미지">
+          <div class="order-details">
+            <div class="product-name">주문번호: ${order.orderNumber || order.orderId}</div>
+            <div class="seller-name">수령자: ${order.name}</div>
+            <div class="price-quantity">주문일: ${formatDate(order.orderDate)}${itemCount > 0 ? ` | ${itemCount}개 상품` : ''}</div>
+            <div class="order-info">주소: ${order.deliveryAddress}</div>
+          </div>
+          <div class="order-status ${statusClass}">${statusText}</div>
+          <div class="expand-icon">▼</div>
+        </div>
+        <div class="order-products" data-order-id="${order.orderId}">
+          <!-- 상품 목록이 여기에 동적으로 추가됩니다 -->
+        </div>
+      `;
+      document.getElementById('orderList').appendChild(orderElement);
+    }
+
+    // 날짜 포맷
+    function formatDate(dateString) {
+      if (!dateString) return '날짜 정보 없음';
+      
+      try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('ko-KR');
+      } catch (e) {
+        return dateString;
+      }
+    }
+  </script>
+</body>
+</html>

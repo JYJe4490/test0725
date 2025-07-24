@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>구매자 정보 수정</title>
+  <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cabin:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-primary: #658352;
+      --color-primary-light: #94A687;
+      --color-background: #FBF9EF;
+      --color-text: #1E2203;
+      --color-border: #E9E7DE;
+      --color-white: #fff;
+    }
+
+    body {
+        font-family: 'Inter', 'Cabin', sans-serif;
+        background-color: var(--color-background);
+        color: var(--color-text);
+        margin: 0;
+        padding: 120px 20px 40px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        box-sizing: border-box;
+    }
+
+    /* --- Navbar Styles --- */
+    .navbar-container {
+        top: 0;
+        left: 0;
+        width: 100%;
+        display: flex;
+        z-index: 1000;
+        position: fixed;
+        justify-content: center;
+        background: var(--color-white);
+        box-shadow: 0 2px 12px 0 rgba(0,0,0,0.06);
+    }
+    .navbar {
+        width: 100%;
+        display: flex;
+        max-width: 1400px;
+        align-items: center;
+        padding: 16px 48px;
+        justify-content: space-between;
+    }
+    .navbar-logo-img {
+        height: 3rem;
+        border-radius: 8px;
+    }
+    .navbar-buttons {
+        gap: 16px;
+        display: flex;
+        align-items: center;
+    }
+    .btn-filled, .btn-outline {
+        display: flex;
+        align-items: center;
+        font-weight: bold;
+        padding: 10px 24px;
+        border-radius: 24px;
+        font-size: 1rem;
+        text-decoration: none;
+        cursor: pointer;
+        border: 1px solid var(--color-primary);
+    }
+    .btn-filled {
+        color: var(--color-white);
+        background: var(--color-primary);
+    }
+    .btn-filled:hover { opacity: 0.9; }
+    .btn-outline {
+        color: var(--color-primary);
+        background: transparent;
+    }
+    .btn-outline:hover { background: rgba(101, 131, 82, 0.1); }
+    
+    .user-name {
+        color: var(--color-primary);
+        font-weight: 600;
+        text-decoration: none;
+        padding: 8px 16px;
+        border-radius: 20px;
+        transition: all 0.2s ease;
+    }
+    .user-name:hover {
+        background-color: var(--color-primary);
+        color: var(--color-white);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(101, 131, 82, 0.3);
+    }
+
+    .edit-container {
+        width: 100%;
+        max-width: 600px;
+        text-align: center;
+    }
+
+    .edit-container h1 {
+        font-size: 2.5rem;
+        color: var(--color-primary);
+        margin-bottom: 30px;
+    }
+
+    .edit-form {
+        background-color: var(--color-white);
+        padding: 40px 50px;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        text-align: left;
+    }
+
+    .form-row {
+        margin-bottom: 20px;
+    }
+
+    .form-row label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: #333;
+    }
+
+    .form-row input, .form-row select {
+        width: 100%;
+        padding: 12px;
+        font-size: 1rem;
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        box-sizing: border-box;
+        transition: border-color 0.2s;
+    }
+
+    .form-row input:focus, .form-row select:focus {
+        outline: none;
+        border-color: var(--color-primary);
+    }
+
+    .required-mark {
+        color: #658352;
+        font-weight: bold;
+        margin-right: 3px;
+    }
+
+    .form-row input[readonly], .form-row select[disabled] {
+        background-color: #f0f0f0;
+        cursor: not-allowed;
+    }
+
+    .input-col {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .postcode-group {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    #postcode {
+        background-color: #f8f9fa;
+    }
+
+    #searchPostcodeBtn {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+        font-weight: bold;
+        border-radius: 8px;
+        border: 1px solid var(--color-primary);
+        background-color: transparent;
+        color: var(--color-primary);
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: all 0.2s;
+    }
+
+    #searchPostcodeBtn:hover {
+        background-color: var(--color-primary);
+        color: var(--color-white);
+    }
+
+    #address, #detailAddress {
+        margin-bottom: 10px;
+    }
+
+    #address {
+        background-color: #f8f9fa;
+    }
+
+    .form-actions {
+        margin-top: 30px;
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+    }
+
+    .form-actions button {
+        flex-grow: 1;
+        padding: 14px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border-radius: 24px;
+        border: 1px solid;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .save-btn {
+        background-color: var(--color-primary);
+        color: var(--color-white);
+        border-color: var(--color-primary);
+    }
+    .save-btn:hover { opacity: 0.9; }
+
+    .cancel-btn {
+        background-color: var(--color-white);
+        color: #555;
+        border-color: #ccc;
+    }
+    .cancel-btn:hover { background-color: #f0f0f0; }
+
+  </style>
+</head>
+<body>
+<header class="navbar-container">
+  <div class="navbar">
+    <a href="/">
+      <img src="/images/free-icon-sprout-7101338.png" alt="로고" class="navbar-logo-img"/>
+    </a>
+    <div class="navbar-buttons">
+      <a href="/buyer/info" class="btn-outline">내 정보</a>
+      <a href="#" onclick="logout()" class="btn-filled">로그아웃</a>
+    </div>
+  </div>
+</header>
+
+<div class="edit-container">
+  <h1>구매자 정보 수정</h1>
+  <form th:action="@{/buyer/edit}" method="post" th:object="${buyerEditForm}" class="edit-form">
+    <!-- 전역 오류 메시지 표시 -->
+    <div th:if="${#fields.hasGlobalErrors()}" style="margin-bottom: 20px;">
+      <div th:each="error : ${#fields.globalErrors()}" th:text="${error}" style="color: red; text-align: center; margin: 10px; padding: 10px; background-color: #ffe6e6; border: 1px solid #ff0000; border-radius: 4px;"></div>
+    </div>
+
+    <div class="form-row">
+      <label for="email">이메일 (수정 불가)</label>
+      <input type="email" id="email" th:field="*{email}" readonly>
+    </div>
+<!--    <div class="form-row">-->
+<!--      <label for="password">비밀번호</label>-->
+<!--      <input type="password" id="password" th:field="*{password}" placeholder="8~15자, 영문+숫자+특수문자" required>-->
+<!--      <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}" style="color: red; font-size: 0.9rem; margin-top: 5px;"></div>-->
+<!--    </div>-->
+<!--    <div class="form-row">-->
+<!--      <label for="passwordConfirm">비밀번호 확인</label>-->
+<!--      <input type="password" id="passwordConfirm" th:field="*{passwordConfirm}" placeholder="비밀번호를 다시 입력하세요" required>-->
+<!--      <div th:if="${#fields.hasErrors('passwordConfirm')}" th:errors="*{passwordConfirm}" style="color: red; font-size: 0.9rem; margin-top: 5px;"></div>-->
+<!--    </div>-->
+    <div class="form-row">
+      <label for="name">이름 (수정 불가)</label>
+      <input type="text" id="name" th:field="*{name}" readonly>
+    </div>
+    <div class="form-row">
+      <label for="nickname">닉네임</label>
+      <input type="text" id="nickname" th:field="*{nickname}" required>
+      <div th:if="${#fields.hasErrors('nickname')}" th:errors="*{nickname}" style="color: red; font-size: 0.9rem; margin-top: 5px;"></div>
+    </div>
+    <div class="form-row">
+      <label for="tel">연락처</label>
+      <input type="text" id="tel" th:field="*{tel}" maxlength="13" placeholder="010-0000-0000" required>
+      <div th:if="${#fields.hasErrors('tel')}" th:errors="*{tel}" style="color: red; font-size: 0.9rem; margin-top: 5px;"></div>
+    </div>
+    <div class="form-row">
+      <label for="gender">성별</label>
+      <select id="gender" th:field="*{gender}">
+        <option value="">선택해주세요</option>
+        <option value="남성">남성</option>
+        <option value="여성">여성</option>
+      </select>
+      <div th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}" style="color: red; font-size: 0.9rem; margin-top: 5px;"></div>
+    </div>
+    <div class="form-row">
+      <label for="birth">생년월일</label>
+      <input type="date" id="birth" name="birth"
+             th:field="*{birth}">
+      <div th:if="${#fields.hasErrors('birth')}" th:errors="*{birth}" style="color: red; font-size: 0.9rem; margin-top: 5px;"></div>
+    </div>
+    <div class="form-row">
+      <label for="postNumber">주소</label>
+      <div class="input-col">
+        <div class="postcode-group">
+          <input type="text" id="postNumber" name="postNumber" th:field="*{postNumber}" placeholder="우편번호" readonly>
+          <button type="button" id="searchPostcodeBtn" onclick="openAddressPopup()">주소 검색</button>
+        </div>
+        <div th:if="${#fields.hasErrors('postNumber')}" th:errors="*{postNumber}" style="color: red; font-size: 0.9rem; margin-top: 5px;"></div>
+
+        <input type="text" id="address" placeholder="주소" readonly>
+        <input type="text" id="detailAddress" placeholder="상세주소">
+
+        <div th:if="${#fields.hasErrors('address')}" th:errors="*{address}" style="color: red; font-size: 0.9rem; margin-top: 5px;"></div>
+
+        <!-- 서버로 보낼 최종 주소값 (숨겨진 필드) -->
+        <input type="hidden" id="fullAddress" name="address" th:field="*{address}">
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <button type="button" class="cancel-btn" onclick="location.href='/buyer/info'">취소</button>
+      <button type="submit" class="save-btn">저장</button>
+    </div>
+  </form>
+</div>
+
+<!-- 주소 검색을 위한 스크립트 -->
+<script>
+  function openAddressPopup() {
+    new daum.Postcode({
+      oncomplete: function(data) {
+        const postNumber = data.zonecode;
+        const roadAddr = data.roadAddress;
+        const jibunAddr = data.jibunAddress;
+        const baseAddr = roadAddr || jibunAddr;
+
+        document.getElementById('postNumber').value = postNumber;
+        document.getElementById('address').value = baseAddr;
+
+        document.getElementById('detailAddress').focus();
+        updateFullAddress(); // 주소 입력 직후에도 합치기
+      }
+    }).open();
+  }
+
+  function updateFullAddress() {
+    const baseAddr = document.getElementById('address').value.trim();
+    const detail = document.getElementById('detailAddress').value.trim();
+    document.getElementById('fullAddress').value = baseAddr + ' ' + detail;
+  }
+
+  // 주소 입력이 바뀌면 fullAddress도 갱신
+  document.getElementById('detailAddress').addEventListener('input', updateFullAddress);
+  document.getElementById('address').addEventListener('input', updateFullAddress);
+
+  function logout() {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/buyer/logout';
+    document.body.appendChild(form);
+    form.submit();
+  }
+
+</script>
+</body>
+</html>

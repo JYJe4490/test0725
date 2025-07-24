@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>새 상품 등록</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cabin:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    /* CSS 변수 */
+    :root {
+      --color-primary: #658352;
+      --color-primary-hover: #94A687;
+      --color-white: #ffffff;
+      --color-background: #FBF9EF;
+      --color-text: #1E2203;
+      --color-border: #E9E7DE;
+      --color-secondary-background: #F5F4ED;
+      --color-error: #e74c3c;
+      --color-success: #27ae60;
+      --layout-max-width: 1400px;
+    }
+
+    /* 기본 레이아웃 */
+    body {
+      margin: 0;
+      font-family: 'Inter', 'Cabin', sans-serif;
+      background-color: var(--color-background);
+      color: var(--color-text);
+      padding-top: 80px;
+      line-height: 1.6;
+    }
+
+    /* --- Navbar Styles --- */
+    .navbar-container {
+        top: 0;
+        left: 0;
+        width: 100%;
+        display: flex;
+        z-index: 1000;
+        position: fixed;
+        justify-content: center;
+        background: var(--color-white);
+        box-shadow: 0 2px 12px 0 rgba(0,0,0,0.06);
+    }
+    .navbar {
+        width: 100%;
+        display: flex;
+        max-width: var(--layout-max-width);
+        align-items: center;
+        padding: 16px 48px;
+        justify-content: space-between;
+    }
+    .navbar-logo-img {
+        height: 3rem;
+        border-radius: 8px;
+    }
+    .navbar-buttons {
+        gap: 16px;
+        display: flex;
+        align-items: center;
+    }
+    .btn-filled, .btn-outline {
+        display: flex;
+        align-items: center;
+        font-weight: bold;
+        padding: 10px 24px;
+        border-radius: 24px;
+        font-size: 1rem;
+        text-decoration: none;
+        transition: background .2s, color .2s;
+        cursor: pointer;
+        border: 1px solid var(--color-primary);
+    }
+    .btn-filled {
+        color: var(--color-white);
+        background: var(--color-primary);
+    }
+    .btn-filled:hover { opacity: 0.9; }
+    .btn-outline {
+        color: var(--color-primary);
+        background: transparent;
+    }
+    .btn-outline:hover { background: rgba(101, 131, 82, 0.1); }
+
+    /* 페이지 컨테이너 */
+    .page-container {
+      width: 100%;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 20px;
+      box-sizing: border-box;
+    }
+
+    /* 페이지 제목 */
+    .page-title {
+      font-family: 'Cabin', sans-serif;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-align: center;
+      font-size: 2.4rem;
+      margin: 0 0 32px 0;
+    }
+
+    /* 폼 컨테이너 */
+    .form-container {
+      background-color: var(--color-white);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* 폼 섹션 */
+    .form-section {
+      margin-bottom: 40px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .form-section:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    .form-section h3 {
+      font-family: 'Cabin', sans-serif;
+      font-size: 1.4rem;
+      color: var(--color-primary);
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--color-primary);
+      display: inline-block;
+    }
+
+    /* 폼 그룹 */
+    .form-group {
+      margin-bottom: 24px;
+    }
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+      font-size: 1rem;
+      color: var(--color-text);
+    }
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group input[type="url"],
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 1rem;
+      border: 2px solid var(--color-border);
+      border-radius: 12px;
+      box-sizing: border-box;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      background-color: var(--color-white);
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(101, 131, 82, 0.1);
+    }
+    .form-group textarea {
+      min-height: 120px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+      color: #999;
+    }
+
+    /* 필수 입력 표시 */
+    .required::after {
+      content: " *";
+      color: var(--color-error);
+      font-weight: bold;
+    }
+
+    /* 폼 액션 버튼 */
+    .form-actions {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 40px;
+      padding-top: 32px;
+      border-top: 1px solid var(--color-border);
+    }
+    .form-actions button {
+      padding: 14px 32px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 2px solid;
+      min-width: 120px;
+    }
+    .submit-btn {
+      background-color: var(--color-primary);
+      color: var(--color-white);
+      border-color: var(--color-primary);
+    }
+    .submit-btn:hover {
+      background-color: var(--color-primary-hover);
+      border-color: var(--color-primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(101, 131, 82, 0.3);
+    }
+    .cancel-btn {
+      background-color: transparent;
+      color: #666;
+      border-color: #ddd;
+    }
+    .cancel-btn:hover {
+      background-color: #f5f5f5;
+      border-color: #ccc;
+      color: #333;
+    }
+
+    /* 반응형 디자인 */
+    @media screen and (max-width: 768px) {
+      .page-container {
+        padding: 0 16px;
+      }
+      
+      .form-container {
+        padding: 24px 20px;
+      }
+      
+      .form-section {
+        margin-bottom: 32px;
+        padding-bottom: 24px;
+      }
+      
+      .form-actions {
+        flex-direction: column;
+        gap: 12px;
+      }
+      
+      .form-actions button {
+        width: 100%;
+      }
+      
+      .page-title {
+        font-size: 2rem;
+      }
+    }
+
+    /* 숨겨진 버튼 제거 */
+    .hidden-submit {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+<!-- Navbar -->
+<header class="navbar-container">
+  <div class="navbar">
+    <a th:href="@{/home}">
+      <img th:src="@{/images/free-icon-sprout-7101338.png}" alt="로고" class="navbar-logo-img"/>
+    </a>
+    <div class="navbar-buttons">
+      <a th:if="${name != null}" th:href="@{/seller/myPage/{sid}(sid=${sid})}" style="margin-right: 12px; font-weight: bold; text-decoration: none; color: var(--color-primary);">
+        <span th:text="${name}"></span>
+      </a>
+      <a th:href="@{/seller/main/{sid}(sid=${sid})}" class="btn-outline">대시보드</a>
+      <a th:href="@{/seller/list/{sid}(sid=${sid})}" class="btn-outline">판매 목록</a>
+      <form th:action="@{/seller/logout}" method="post" style="display:inline;">
+        <button type="submit" class="btn-filled">로그아웃</button>
+      </form>
+    </div>
+  </div>
+</header>
+
+<div class="page-container">
+  <h2 class="page-title">새 상품 등록</h2>
+
+  <div class="form-container">
+    <form id="productForm" th:action="@{/seller/add/{sid}(sid=${sid})}" th:object="${product}" method="post">
+      <!-- 숨겨진 제출 버튼 -->
+      <button type="submit" class="hidden-submit">상품 등록</button>
+
+      <div class="form-section">
+        <h3>기본 정보</h3>
+        <div class="form-group">
+          <label for="productName" class="required">상품 이름</label>
+          <input type="text" id="productName" th:field="*{productName}" placeholder="예: 유기농 햇감자" required>
+        </div>
+        <div class="form-group">
+          <label for="title" class="required">고객에게 보여줄 제목</label>
+          <input type="text" id="title" th:field="*{title}" placeholder="예: 강원도 청정지역에서 막 캐낸 유기농 햇감자 2kg" required>
+        </div>
+        <div class="form-group">
+          <label for="content" class="required">상품 내용</label>
+          <textarea id="content" th:field="*{content}" placeholder="상품에 대한 상세한 설명을 입력하세요." required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="countryOfOrigin" class="required">원산지</label>
+          <input type="text" id="countryOfOrigin" th:field="*{countryOfOrigin}" placeholder="예: 대한민국 강원도" required>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3>판매 정보</h3>
+        <div class="form-group">
+          <label for="price" class="required">가격 (원)</label>
+          <input type="number" id="price" th:field="*{price}" placeholder="숫자만 입력" min="0" required>
+        </div>
+        <div class="form-group">
+          <label for="quantity" class="required">수량 (재고)</label>
+          <input type="number" id="quantity" th:field="*{quantity}" placeholder="숫자만 입력" min="0" required>
+        </div>
+        <div class="form-group">
+          <label for="status" class="required">판매 상태</label>
+          <select id="status" th:field="*{status}" required>
+            <option value="판매중">판매중</option>
+            <option value="재고소진">재고소진</option>
+            <option value="비활성화">비활성화</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3>이미지 등록</h3>
+        <div class="form-group">
+          <label for="thumbnail">섬네일 사진 URL</label>
+          <input type="url" id="thumbnail" th:field="*{thumbnail}" placeholder="대표 이미지 URL을 입력하세요">
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3>배송 정보</h3>
+        <div class="form-group">
+          <label for="deliveryFee" class="required">배송비 (원)</label>
+          <input type="number" id="deliveryFee" th:field="*{deliveryFee}" placeholder="무료배송 시 0 입력" min="0" required>
+        </div>
+        <div class="form-group">
+          <label for="deliveryMethod">배송 방법</label>
+          <textarea id="deliveryMethod" th:field="*{deliveryMethod}" rows="3" placeholder="예: CJ대한통운 (평일 오후 2시 이전 주문 시 당일 출고)"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="deliveryInformation">배송 안내</label>
+          <textarea id="deliveryInformation" th:field="*{deliveryInformation}" rows="3" placeholder="예: 제주 및 도서산간 지역은 추가 배송비가 발생할 수 있습니다."></textarea>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="cancel-btn" th:onclick="|location.href='@{/seller/list/{sid}(sid=${sid})}'|">취소</button>
+        <button type="submit" class="submit-btn">등록</button>
+      </div>
+    </form>
+  </div>
+</div>
+</body>
+</html>
