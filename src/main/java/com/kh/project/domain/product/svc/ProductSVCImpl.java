@@ -62,4 +62,13 @@ public class ProductSVCImpl implements ProductSVC{
   public List<Product> allProduct() {
     return productDAO.allProduct();
   }
+
+  // 판매자 ID로 상품들 비활성화
+  @Override
+  public int deactivateBySellerId(Long sellerId) {
+    log.info("ProductSVCImpl.deactivateBySellerId 호출: sellerId={}", sellerId);
+    int result = productDAO.deactivateBySellerId(sellerId);
+    log.info("ProductSVCImpl.deactivateBySellerId 결과: {}", result);
+    return result;
+  }
 }

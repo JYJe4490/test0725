@@ -211,4 +211,21 @@ public class ProductDAOImpl implements ProductDAO{
 
     return productList;
   }
+
+  /**
+   * 판매자 ID로 상품들 비활성화
+   * @param sellerId 판매자 ID
+   * @return 업데이트된 행 수
+   */
+  @Override
+  public int deactivateBySellerId(Long sellerId) {
+    StringBuffer sql = new StringBuffer();
+    sql.append(" UPDATE product SET status = '비활성화' ");
+    sql.append(" WHERE seller_id = :sellerId ");
+
+    SqlParameterSource param = new MapSqlParameterSource().addValue("sellerId", sellerId);
+
+    int i = template.update(sql.toString(), param);
+    return i;
+  }
 }

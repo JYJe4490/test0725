@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>구매자 회원가입</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cabin:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    /* CSS 변수 정의 */
+    :root {
+      --color-primary: #658352;
+      --color-primary-light: #94A687;
+      --color-primary-hover: #5a7347;
+      --color-background: #FBF9EF;
+      --color-text: #1E2203;
+      --color-text-muted: #6c757d;
+      --color-border: #E9E7DE;
+      --color-white: #fff;
+      --color-gray-light: #f8f9fa;
+      --color-gray-medium: #e9ecef;
+      --color-danger: #dc3545;
+      --color-success: #28a745;
+      --color-warning: #fff3cd;
+      --color-warning-border: #ffeaa7;
+      --color-warning-text: #856404;
+      --layout-max-width: 1400px;
+      --layout-radius: 12px;
+      --layout-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      --layout-shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.15);
+      --transition-default: all 0.3s ease;
+      --transition-fast: all 0.2s ease;
+    }
+
+    /* 기본 스타일 */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', 'Cabin', sans-serif;
+      background-color: var(--color-background);
+      color: var(--color-text);
+      padding: 120px 20px 40px;
+      line-height: 1.6;
+    }
+
+    /* Navbar 스타일 */
+    .navbar-container {
+      top: 0;
+      left: 0;
+      width: 100%;
+      display: flex;
+      z-index: 1000;
+      position: fixed;
+      justify-content: center;
+      background: var(--color-white);
+      box-shadow: var(--layout-shadow);
+    }
+
+    .navbar {
+      width: 100%;
+      display: flex;
+      max-width: var(--layout-max-width);
+      align-items: center;
+      padding: 16px 48px;
+      justify-content: space-between;
+    }
+
+    .navbar-logo-img {
+      height: 3rem;
+      border-radius: 8px;
+      transition: var(--transition-default);
+    }
+
+    .navbar-logo-img:hover {
+      transform: scale(1.05);
+    }
+
+    .navbar-buttons {
+      gap: 16px;
+      display: flex;
+      align-items: center;
+    }
+
+    .btn-filled, .btn-outline {
+      display: flex;
+      align-items: center;
+      font-weight: bold;
+      padding: 10px 24px;
+      border-radius: 24px;
+      font-size: 1rem;
+      text-decoration: none;
+      transition: var(--transition-default);
+      cursor: pointer;
+      border: 1px solid var(--color-primary);
+    }
+
+    .btn-filled {
+      color: var(--color-white);
+      background: var(--color-primary);
+    }
+
+    .btn-filled:hover {
+      background: var(--color-primary-hover);
+      transform: translateY(-2px);
+    }
+
+    .btn-outline {
+      color: var(--color-primary);
+      background: transparent;
+    }
+
+    .btn-outline:hover {
+      background: rgba(101, 131, 82, 0.1);
+      transform: translateY(-2px);
+    }
+
+    /* 메인 컨테이너 */
+    .signup-container {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: var(--color-white);
+      padding: 40px 50px;
+      border-radius: var(--layout-radius);
+      box-shadow: var(--layout-shadow);
+      transition: var(--transition-default);
+    }
+
+    .signup-container:hover {
+      box-shadow: var(--layout-shadow-hover);
+    }
+
+    .signup-container h2 {
+      font-family: 'Cabin', sans-serif;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-align: center;
+      font-size: 2.2rem;
+      margin: 0 0 30px;
+    }
+
+    /* 폼 요소 */
+    .form-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .form-row label {
+      width: 120px;
+      text-align: left;
+      font-weight: bold;
+      flex-shrink: 0;
+      padding-top: 10px;
+      font-size: 0.95rem;
+      color: var(--color-text);
+    }
+
+    .input-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    input[type="text"], 
+    input[type="email"], 
+    input[type="password"], 
+    input[type="date"], 
+    select {
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--color-border);
+      font-size: 1rem;
+      width: 100%;
+      transition: var(--transition-default);
+      background-color: var(--color-white);
+    }
+
+    input:focus, 
+    select:focus {
+      border-color: var(--color-primary);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(101, 131, 82, 0.1);
+    }
+
+    input:disabled {
+      background-color: var(--color-gray-light);
+      cursor: not-allowed;
+    }
+
+    /* 주소 검색 */
+    .postcode-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    #postcode {
+      background-color: var(--color-gray-light);
+    }
+
+    #searchPostcodeBtn {
+      padding: 12px 16px;
+      font-size: 0.9rem;
+      font-weight: bold;
+      border-radius: 8px;
+      border: 1px solid var(--color-primary);
+      background-color: transparent;
+      color: var(--color-primary);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: var(--transition-default);
+    }
+
+    #searchPostcodeBtn:hover {
+      background-color: var(--color-primary);
+      color: var(--color-white);
+      transform: translateY(-1px);
+    }
+
+    #shopAddress {
+      background-color: var(--color-gray-light);
+      margin-bottom: 10px;
+    }
+
+    #detailAddress {
+      margin-bottom: 10px;
+    }
+
+    /* 회원가입 버튼 */
+    .signup-btn {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      margin-top: 30px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border-radius: 24px;
+      border: none;
+      background-color: var(--color-primary);
+      color: var(--color-white);
+      cursor: pointer;
+      transition: var(--transition-default);
+    }
+
+    .signup-btn:hover {
+      background-color: var(--color-primary-hover);
+      transform: translateY(-2px);
+      box-shadow: var(--layout-shadow-hover);
+    }
+
+    .signup-btn:disabled {
+      background-color: var(--color-gray-medium);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* 에러 메시지 */
+    .error-msg {
+      color: var(--color-danger);
+      font-size: 0.85rem;
+      margin-top: 6px;
+      min-height: 1.2em;
+      transition: var(--transition-fast);
+    }
+
+    .error-msg.show {
+      display: block;
+    }
+
+    .error-msg.hide {
+      display: none;
+    }
+
+    /* 생년월일 선택기 */
+    .birth-selector {
+      display: flex;
+      gap: 8px;
+    }
+
+    .birth-select {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid var(--color-border);
+      font-size: 1rem;
+      background-color: var(--color-white);
+      cursor: pointer;
+      transition: var(--transition-default);
+    }
+
+    .birth-select:focus {
+      border-color: var(--color-primary);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(101, 131, 82, 0.1);
+    }
+
+    .birth-select option {
+      padding: 8px;
+    }
+
+    /* 서버 에러 메시지 */
+    .server-error {
+      background-color: var(--color-warning);
+      border: 1px solid var(--color-warning-border);
+      color: var(--color-warning-text);
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      body {
+        padding: 100px 10px 20px;
+      }
+
+      .navbar {
+        padding: 12px 20px;
+      }
+
+      .signup-container {
+        padding: 30px 20px;
+        margin: 0 10px;
+      }
+
+      .signup-container h2 {
+        font-size: 1.8rem;
+      }
+
+      .form-row {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .form-row label {
+        width: 100%;
+        padding-top: 0;
+      }
+
+      .birth-selector {
+        flex-direction: column;
+      }
+
+      .postcode-group {
+        flex-direction: column;
+      }
+
+      #searchPostcodeBtn {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .signup-container {
+        padding: 20px 15px;
+      }
+
+      .signup-container h2 {
+        font-size: 1.5rem;
+      }
+
+      input[type="text"], 
+      input[type="email"], 
+      input[type="password"], 
+      input[type="date"], 
+      select {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <header class="navbar-container">
+    <div class="navbar">
+      <a href="/home">
+        <img src="/images/free-icon-sprout-7101338.png" alt="로고" class="navbar-logo-img"/>
+      </a>
+      <div class="navbar-buttons">
+        <a href="/common/select_login" class="btn-outline">로그인</a>
+        <a href="/common/select_signup" class="btn-filled">회원가입</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 메인 컨테이너 -->
+  <div class="signup-container">
+    <form th:action="@{/buyer/signup}" th:object="${buyer}" method="post" id="signupForm">
+      <h2>구매자 회원가입</h2>
+
+      <!-- 서버 에러 메시지 -->
+      <div th:if="${error}" class="server-error" th:text="${error}"></div>
+
+      <!-- 이메일 -->
+      <div class="form-row">
+        <label for="email">이메일</label>
+        <div class="input-col">
+          <input type="email" id="email" th:field="*{email}" placeholder="example@email.com" required />
+          <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="error-msg show"></div>
+          <div id="error-email" class="error-msg hide"></div>
+        </div>
+      </div>
+
+      <!-- 비밀번호 -->
+      <div class="form-row">
+        <label for="password">비밀번호</label>
+        <div class="input-col">
+          <input type="password" id="password" th:field="*{password}" placeholder="비밀번호 입력" required />
+          <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="error-msg show"></div>
+          <div id="error-password" class="error-msg hide"></div>
+        </div>
+      </div>
+
+      <!-- 이름 -->
+      <div class="form-row">
+        <label for="name">이름</label>
+        <div class="input-col">
+          <input type="text" id="name" th:field="*{name}" placeholder="이름 입력" required />
+          <div th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="error-msg show"></div>
+          <div id="error-name" class="error-msg hide"></div>
+        </div>
+      </div>
+
+      <!-- 닉네임 -->
+      <div class="form-row">
+        <label for="nickname">닉네임</label>
+        <div class="input-col">
+          <input type="text" id="nickname" th:field="*{nickname}" placeholder="닉네임 입력" required />
+          <div th:if="${#fields.hasErrors('nickname')}" th:errors="*{nickname}" class="error-msg show"></div>
+          <div id="error-nickname" class="error-msg hide"></div>
+        </div>
+      </div>
+
+      <!-- 전화번호 -->
+      <div class="form-row">
+        <label for="tel">전화번호</label>
+        <div class="input-col">
+          <input type="text" id="tel" th:field="*{tel}" placeholder="010-1234-5678" required />
+          <div th:if="${#fields.hasErrors('tel')}" th:errors="*{tel}" class="error-msg show"></div>
+          <div id="error-tel" class="error-msg hide"></div>
+        </div>
+      </div>
+
+      <!-- 성별 -->
+      <div class="form-row">
+        <label for="gender">성별</label>
+        <div class="input-col">
+          <select id="gender" th:field="*{gender}" required>
+            <option value="">선택</option>
+            <option value="남성">남성</option>
+            <option value="여성">여성</option>
+          </select>
+          <div th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}" class="error-msg show"></div>
+          <div id="error-gender" class="error-msg hide"></div>
+        </div>
+      </div>
+
+      <!-- 생년월일 -->
+      <div class="form-row">
+        <label for="birth">생년월일</label>
+        <div class="input-col">
+          <div class="birth-selector">
+            <select id="birthYear" class="birth-select">
+              <option value="">년도</option>
+            </select>
+            <select id="birthMonth" class="birth-select">
+              <option value="">월</option>
+            </select>
+            <select id="birthDay" class="birth-select">
+              <option value="">일</option>
+            </select>
+          </div>
+          <input type="hidden" id="birth" th:field="*{birth}" />
+          <div th:if="${#fields.hasErrors('birth')}" th:errors="*{birth}" class="error-msg show"></div>
+          <div id="error-birth" class="error-msg hide"></div>
+        </div>
+      </div>
+
+      <!-- 주소 -->
+      <div class="form-row">
+        <label for="postNumber">주소</label>
+        <div class="input-col">
+          <div class="postcode-group">
+            <input type="text" id="postNumber" th:field="*{postNumber}" placeholder="우편번호" readonly required>
+            <button type="button" id="searchPostcodeBtn">주소 검색</button>
+          </div>
+          <input type="text" id="shopAddress" placeholder="주소" readonly>
+          <input type="text" id="detailAddress" placeholder="상세주소를 입력해주세요">
+          <input type="hidden" th:field="*{address}" id="fullAddress">
+          <div id="error-address" class="error-msg hide"></div>
+        </div>
+      </div>
+
+      <!-- 회원가입 버튼 -->
+      <button type="submit" class="signup-btn">회원가입</button>
+    </form>
+  </div>
+
+  <!-- Daum Postcode API -->
+  <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+  
+  <script>
+    // 유효성 검사 규칙
+    const validationRules = {
+      email: {
+        regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        message: '올바른 이메일 형식을 입력해주세요.'
+      },
+      password: {
+        regex: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{8,20}$/,
+        message: '비밀번호는 8~20자의 영문, 숫자, 특수문자(@$!%*?&)를 모두 포함해야 합니다.'
+      },
+      phone: {
+        regex: /^01[0-9]-[0-9]{3,4}-[0-9]{4}$/,
+        message: '올바른 전화번호 형식을 입력해주세요. (예: 010-1234-5678)'
+      },
+      name: {
+        min: 2,
+        max: 10,
+        message: '이름은 2~10자로 입력해주세요.'
+      },
+      nickname: {
+        min: 2,
+        max: 15,
+        message: '닉네임은 2~15자로 입력해주세요.'
+      }
+    };
+
+    // DOM 요소 초기화
+    function initializeElements() {
+      return {
+        form: document.getElementById('signupForm'),
+        emailInput: document.getElementById('email'),
+        passwordInput: document.getElementById('password'),
+        nameInput: document.getElementById('name'),
+        nicknameInput: document.getElementById('nickname'),
+        telInput: document.getElementById('tel'),
+        genderSelect: document.getElementById('gender'),
+        birthYearSelect: document.getElementById('birthYear'),
+        birthMonthSelect: document.getElementById('birthMonth'),
+        birthDaySelect: document.getElementById('birthDay'),
+        birthHidden: document.getElementById('birth'),
+        postNumberInput: document.getElementById('postNumber'),
+        shopAddressInput: document.getElementById('shopAddress'),
+        detailAddressInput: document.getElementById('detailAddress'),
+        fullAddressInput: document.getElementById('fullAddress'),
+        searchPostcodeBtn: document.getElementById('searchPostcodeBtn'),
+        signupBtn: document.querySelector('.signup-btn')
+      };
+    }
+
+    // 유효성 검사 함수들
+    function validateEmail(email) {
+      return validationRules.email.regex.test(email);
+    }
+
+    function validatePassword(password) {
+      return validationRules.password.regex.test(password);
+    }
+
+    function validatePhone(phone) {
+      return validationRules.phone.regex.test(phone);
+    }
+
+    function validateName(name) {
+      return name.length >= validationRules.name.min && name.length <= validationRules.name.max;
+    }
+
+    function validateNickname(nickname) {
+      return nickname.length >= validationRules.nickname.min && nickname.length <= validationRules.nickname.max;
+    }
+
+    function validateBirth(birth) {
+      if (!birth) return false;
+      const today = new Date();
+      const birthDate = new Date(birth);
+      const age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      const dayDiff = today.getDate() - birthDate.getDate();
+      
+      if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+        age--;
+      }
+      return age >= 14 && age <= 100;
+    }
+
+    function validateAddress() {
+      const postNumber = document.getElementById('postNumber').value;
+      const shopAddress = document.getElementById('shopAddress').value;
+      const detailAddress = document.getElementById('detailAddress').value;
+      return postNumber && shopAddress && detailAddress;
+    }
+
+    // 에러 메시지 표시/숨김
+    function showError(elementId, message) {
+      const element = document.getElementById(elementId);
+      if (element) {
+        element.textContent = message;
+        element.classList.remove('hide');
+        element.classList.add('show');
+      }
+    }
+
+    function hideError(elementId) {
+      const element = document.getElementById(elementId);
+      if (element) {
+        element.textContent = '';
+        element.classList.remove('show');
+        element.classList.add('hide');
+      }
+    }
+
+    // 생년월일 관련 함수들
+    function updateBirthDate() {
+      const year = document.getElementById('birthYear').value;
+      const month = document.getElementById('birthMonth').value;
+      const day = document.getElementById('birthDay').value;
+      
+      if (year && month && day) {
+        const birthDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        document.getElementById('birth').value = birthDate;
+      } else {
+        document.getElementById('birth').value = '';
+      }
+    }
+
+    function populateBirthSelectors() {
+      const yearSelect = document.getElementById('birthYear');
+      const monthSelect = document.getElementById('birthMonth');
+      const daySelect = document.getElementById('birthDay');
+      
+      // 년도 옵션 (현재 년도부터 100년 전까지)
+      const currentYear = new Date().getFullYear();
+      for (let year = currentYear; year >= currentYear - 100; year--) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year + '년';
+        yearSelect.appendChild(option);
+      }
+      
+      // 월 옵션
+      for (let month = 1; month <= 12; month++) {
+        const option = document.createElement('option');
+        option.value = month;
+        option.textContent = month + '월';
+        monthSelect.appendChild(option);
+      }
+      
+      // 일 옵션 (기본 31일)
+      for (let day = 1; day <= 31; day++) {
+        const option = document.createElement('option');
+        option.value = day;
+        option.textContent = day + '일';
+        daySelect.appendChild(option);
+      }
+    }
+
+    function updateDays() {
+      const year = parseInt(document.getElementById('birthYear').value);
+      const month = parseInt(document.getElementById('birthMonth').value);
+      const daySelect = document.getElementById('birthDay');
+      
+      if (year && month) {
+        const daysInMonth = new Date(year, month, 0).getDate();
+        
+        // 기존 일 옵션 제거
+        daySelect.innerHTML = '<option value="">일</option>';
+        
+        // 새로운 일 옵션 추가
+        for (let day = 1; day <= daysInMonth; day++) {
+          const option = document.createElement('option');
+          option.value = day;
+          option.textContent = day + '일';
+          daySelect.appendChild(option);
+        }
+      }
+    }
+
+    // 주소 관련 함수들
+    function searchAddress() {
+      new daum.Postcode({
+        oncomplete: function(data) {
+          document.getElementById('postNumber').value = data.zonecode;
+          document.getElementById('shopAddress').value = data.address;
+          document.getElementById('detailAddress').focus();
+          updateFullAddress();
+          hideError('error-address');
+        }
+      }).open();
+    }
+
+    function updateFullAddress() {
+      const addr = document.getElementById('shopAddress').value;
+      const detail = document.getElementById('detailAddress').value;
+      document.getElementById('fullAddress').value = addr + ' ' + detail;
+    }
+
+    // 이메일 중복 체크 함수
+    async function checkEmailDuplicate(email) {
+      try {
+        const response = await fetch(`/buyer/check-email?email=${encodeURIComponent(email)}`);
+        const result = await response.json();
+        
+        if (result.exists) {
+          showError('error-email', '이미 가입된 이메일입니다');
+        } else {
+          hideError('error-email');
+        }
+      } catch (error) {
+        console.error('이메일 중복 체크 오류:', error);
+      }
+    }
+
+    // 실시간 유효성 검사 설정
+    function setupRealTimeValidation() {
+      const elements = initializeElements();
+
+      // 이메일 실시간 검사
+      if (elements.emailInput) {
+        let emailTimeout;
+        elements.emailInput.addEventListener('blur', function() {
+          const email = this.value.trim();
+          if (email && validateEmail(email)) {
+            checkEmailDuplicate(email);
+          }
+        });
+        
+        elements.emailInput.addEventListener('input', function() {
+          const email = this.value.trim();
+          clearTimeout(emailTimeout);
+          if (email && validateEmail(email)) {
+            emailTimeout = setTimeout(() => {
+              checkEmailDuplicate(email);
+            }, 500);
+          } else {
+            hideError('error-email');
+          }
+        });
+      }
+
+      // 비밀번호 실시간 검사
+      if (elements.passwordInput) {
+        elements.passwordInput.addEventListener('blur', function() {
+          const password = this.value;
+          if (password && !validatePassword(password)) {
+            showError('error-password', validationRules.password.message);
+          } else {
+            hideError('error-password');
+          }
+        });
+      }
+
+      // 이름 실시간 검사
+      if (elements.nameInput) {
+        elements.nameInput.addEventListener('blur', function() {
+          const name = this.value;
+          if (name && !validateName(name)) {
+            showError('error-name', validationRules.name.message);
+          } else {
+            hideError('error-name');
+          }
+        });
+      }
+
+      // 닉네임 실시간 검사
+      if (elements.nicknameInput) {
+        elements.nicknameInput.addEventListener('blur', function() {
+          const nickname = this.value;
+          if (nickname && !validateNickname(nickname)) {
+            showError('error-nickname', validationRules.nickname.message);
+          } else {
+            hideError('error-nickname');
+          }
+        });
+      }
+
+      // 전화번호 실시간 검사 및 포맷팅
+      if (elements.telInput) {
+        elements.telInput.addEventListener('blur', function() {
+          const tel = this.value;
+          if (tel && !validatePhone(tel)) {
+            showError('error-tel', validationRules.phone.message);
+          } else {
+            hideError('error-tel');
+          }
+        });
+        
+        elements.telInput.addEventListener('input', function() {
+          let value = this.value.replace(/[^0-9]/g, '');
+          
+          if (value.length > 11) {
+            value = value.substring(0, 11);
+          }
+          
+          if (value.length >= 3 && value.length <= 7) {
+            value = value.replace(/(\d{3})(\d{1,4})/, '$1-$2');
+          } else if (value.length >= 8) {
+            value = value.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+          }
+          this.value = value;
+        });
+      }
+
+      // 생년월일 선택 이벤트
+      if (elements.birthYearSelect) {
+        elements.birthYearSelect.addEventListener('change', function() {
+          updateDays();
+          updateBirthDate();
+        });
+      }
+      
+      if (elements.birthMonthSelect) {
+        elements.birthMonthSelect.addEventListener('change', function() {
+          updateDays();
+          updateBirthDate();
+        });
+      }
+      
+      if (elements.birthDaySelect) {
+        elements.birthDaySelect.addEventListener('change', updateBirthDate);
+      }
+
+      // 주소 검색 버튼
+      if (elements.searchPostcodeBtn) {
+        elements.searchPostcodeBtn.addEventListener('click', searchAddress);
+      }
+
+      // 상세주소 입력 시 전체 주소 업데이트
+      if (elements.detailAddressInput) {
+        elements.detailAddressInput.addEventListener('input', updateFullAddress);
+      }
+    }
+
+    // 폼 유효성 검사
+    function validateForm() {
+      let isValid = true;
+      const elements = initializeElements();
+
+      // 이메일 검증
+      const email = elements.emailInput.value;
+      if (!email) {
+        showError('error-email', '이메일을 입력해주세요.');
+        isValid = false;
+      } else if (!validateEmail(email)) {
+        showError('error-email', validationRules.email.message);
+        isValid = false;
+      } else {
+        hideError('error-email');
+      }
+
+      // 비밀번호 검증
+      const password = elements.passwordInput.value;
+      if (!password) {
+        showError('error-password', '비밀번호를 입력해주세요.');
+        isValid = false;
+      } else if (!validatePassword(password)) {
+        showError('error-password', validationRules.password.message);
+        isValid = false;
+      } else {
+        hideError('error-password');
+      }
+
+      // 이름 검증
+      const name = elements.nameInput.value;
+      if (!name) {
+        showError('error-name', '이름을 입력해주세요.');
+        isValid = false;
+      } else if (!validateName(name)) {
+        showError('error-name', validationRules.name.message);
+        isValid = false;
+      } else {
+        hideError('error-name');
+      }
+
+      // 닉네임 검증
+      const nickname = elements.nicknameInput.value;
+      if (!nickname) {
+        showError('error-nickname', '닉네임을 입력해주세요.');
+        isValid = false;
+      } else if (!validateNickname(nickname)) {
+        showError('error-nickname', validationRules.nickname.message);
+        isValid = false;
+      } else {
+        hideError('error-nickname');
+      }
+
+      // 전화번호 검증
+      const tel = elements.telInput.value;
+      if (!tel) {
+        showError('error-tel', '전화번호를 입력해주세요.');
+        isValid = false;
+      } else if (!validatePhone(tel)) {
+        showError('error-tel', validationRules.phone.message);
+        isValid = false;
+      } else {
+        hideError('error-tel');
+      }
+
+      // 성별 검증
+      const gender = elements.genderSelect.value;
+      if (!gender) {
+        showError('error-gender', '성별을 선택해주세요.');
+        isValid = false;
+      } else {
+        hideError('error-gender');
+      }
+
+      // 생년월일 검증
+      const birth = elements.birthHidden.value;
+      if (!birth) {
+        showError('error-birth', '생년월일을 입력해주세요.');
+        isValid = false;
+      } else if (!validateBirth(birth)) {
+        showError('error-birth', '만 14세 이상 100세 이하만 가입 가능합니다.');
+        isValid = false;
+      } else {
+        hideError('error-birth');
+      }
+
+      // 주소 검증
+      if (!validateAddress()) {
+        showError('error-address', '주소를 모두 입력해주세요.');
+        isValid = false;
+      } else {
+        hideError('error-address');
+      }
+
+      return isValid;
+    }
+
+    // 이벤트 리스너 설정
+    function setupEventListeners() {
+      const elements = initializeElements();
+
+      // 폼 제출 시 유효성 검사
+      if (elements.form) {
+        elements.form.addEventListener('submit', function(e) {
+          if (!validateForm()) {
+            e.preventDefault();
+            alert('입력 정보를 확인해주세요.');
+            return false;
+          }
+        });
+      }
+    }
+
+    // 초기화
+    document.addEventListener("DOMContentLoaded", () => {
+      // 생년월일 선택기 초기화
+      populateBirthSelectors();
+      
+      // 실시간 유효성 검사 설정
+      setupRealTimeValidation();
+      
+      // 이벤트 리스너 설정
+      setupEventListeners();
+    });
+  </script>
+</body>
+</html>

@@ -181,6 +181,22 @@ VALUES (1, '외장하드', '2TB 외장하드 USB 3.0', 2500, '주문 후 1-2일 
 INSERT INTO PRODUCT (seller_id, product_name, title, delivery_fee, delivery_information, delivery_METHOD, Country_of_origin, content, price, quantity, thumbnail, status) 
 VALUES (2, '태블릿 거치대', '아이패드 프로 거치대', 2000, '주문 후 1일 내 배송', '택배', '대한민국', '아이패드 프로 전용 거치대입니다. 다양한 각도로 조절 가능하며 접이식으로 휴대하기 편리합니다.', 35000, 45, 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400&h=400&fit=crop', '판매중');
 
+-- 구매자 테스트 데이터 5개
+INSERT INTO BUYER (EMAIL, password, name, nickname, tel, gender, birth, post_number, address, status) 
+VALUES ('buyer1@test.com', 'password123', '김구매', '구매자1', '010-1234-5678', '남성', TO_DATE('1990-01-15', 'YYYY-MM-DD'), 12345, '서울시 강남구 테스트로 123', '활성화');
+
+INSERT INTO BUYER (EMAIL, password, name, nickname, tel, gender, birth, post_number, address, status) 
+VALUES ('buyer2@test.com', 'password123', '이구매', '구매자2', '010-2345-6789', '여성', TO_DATE('1992-03-20', 'YYYY-MM-DD'), 23456, '서울시 서초구 테스트로 456', '활성화');
+
+INSERT INTO BUYER (EMAIL, password, name, nickname, tel, gender, birth, post_number, address, status) 
+VALUES ('buyer3@test.com', 'password123', '박구매', '구매자3', '010-3456-7890', '남성', TO_DATE('1988-07-10', 'YYYY-MM-DD'), 34567, '서울시 마포구 테스트로 789', '활성화');
+
+INSERT INTO BUYER (EMAIL, password, name, nickname, tel, gender, birth, post_number, address, status) 
+VALUES ('buyer4@test.com', 'password123', '최구매', '구매자4', '010-4567-8901', '여성', TO_DATE('1995-11-25', 'YYYY-MM-DD'), 45678, '서울시 송파구 테스트로 101', '활성화');
+
+INSERT INTO BUYER (EMAIL, password, name, nickname, tel, gender, birth, post_number, address, status) 
+VALUES ('buyer5@test.com', 'password123', '정구매', '구매자5', '010-5678-9012', '남성', TO_DATE('1993-09-05', 'YYYY-MM-DD'), 56789, '서울시 영등포구 테스트로 202', '활성화');
+
 COMMIT;
 
 -- =====================================================

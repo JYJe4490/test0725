@@ -49,4 +49,5 @@ public class SellerPasswordController {
 
     return Map.of("success", matched);
   }
+
 }

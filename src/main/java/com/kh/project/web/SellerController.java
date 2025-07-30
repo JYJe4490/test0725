@@ -311,15 +311,22 @@ public class SellerController {
       model.addAttribute("error","잘못된 접근 입니다.");
       return "error/forbidden";
     }
-    int i = sellerSVC.delete(sid);
+    
+    try {
+      int i = sellerSVC.delete(sid);
 
-
-    if (i != 1){
-      model.addAttribute("error"," 에러 회원 탈퇴 실패 ");
+      if (i != 1){
+        model.addAttribute("error"," 회원 탈퇴 처리 중 오류가 발생했습니다. ");
+        return "redirect:/seller/myPage/" + sid;
+      }else {
+        session.invalidate();
+        redirectAttributes.addFlashAttribute("msg", "회원 탈퇴가 완료되었습니다. 등록하신 모든 상품이 비활성화 처리되었습니다.");
+        return "redirect:/home";
+      }
+    } catch (Exception e) {
+      log.error("판매자 탈퇴 처리 중 오류 발생: sellerId={}", sid, e);
+      model.addAttribute("error"," 회원 탈퇴 처리 중 오류가 발생했습니다. ");
       return "redirect:/seller/myPage/" + sid;
-    }else {
-      session.invalidate();
-      return "redirect:/home";
     }
   }
 

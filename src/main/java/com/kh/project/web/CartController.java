@@ -121,9 +121,22 @@ public class CartController {
 
   // 장바구니 목록 조회
   @GetMapping("/{bid}")
-  public ApiResponse<List<CartItemDTO>> findByBuyerId(@PathVariable Long bid) {
+  public ApiResponse<List<CartItemDTO>> findByBuyerId(@PathVariable("bid") Long bid) {
+    log.info("=== 장바구니 조회 API 호출 ===");
+    log.info("요청된 buyerId: {}", bid);
+    log.info("현재 서버 포트: {}", System.getProperty("server.port"));
+    
     List<Cart> cartList = cartSVC.findByBuyerId(bid);
+    log.info("CartSVC에서 조회된 cart 개수: {}", cartList.size());
+    
+    if (cartList.isEmpty()) {
+      log.warn("장바구니가 비어있습니다. buyerId: {}", bid);
+      return ApiResponse.of(ApiResponseCode.SUCCESS, List.of());
+    }
+    
     List<CartItemDTO> cartItems = cartList.stream().map(cart -> {
+      log.debug("Cart 처리 중: cartId={}, productId={}", cart.getCartId(), cart.getProductId());
+      
       Product product = productSVC.findById(cart.getProductId()).orElseThrow();
       CartItemDTO dto = new CartItemDTO();
       dto.setCartId(cart.getCartId());
@@ -134,8 +147,13 @@ public class CartController {
       dto.setProductThumbnail(product.getThumbnail());
       dto.setProductPrice(product.getPrice());
       dto.setDeliveryFee(product.getDeliveryFee());
+      
+      log.debug("DTO 생성 완료: cartId={}, productTitle={}", dto.getCartId(), dto.getProductTitle());
       return dto;
     }).toList();
+    
+    log.info("최종 반환할 cartItems 개수: {}", cartItems.size());
+    log.info("=== 장바구니 조회 API 완료 ===");
     
     // 빈 목록이어도 성공 응답 반환
     return ApiResponse.of(ApiResponseCode.SUCCESS, cartItems);

@@ -43,7 +43,7 @@ public class ProductController {
   // API 엔드포인트 추가
   @GetMapping("/api/product/{productId}")
   @org.springframework.web.bind.annotation.ResponseBody
-  public ApiResponse<Product> getProductApi(@PathVariable Long productId) {
+  public ApiResponse<Product> getProductApi(@PathVariable("productId") Long productId) {
     try {
       Optional<Product> productOpt = productSVC.findById(productId);
       if (productOpt.isPresent()) {
@@ -99,35 +99,126 @@ public class ProductController {
       }
       
       Product product = productOpt.get();
-      log.info("기존 상품 정보: ID={}, 판매자ID={}, 현재상태={}", 
-               product.getProductId(), product.getSellerId(), product.getStatus());
       
-      // 판매자 본인의 상품인지 확인
+      // 권한 확인: 상품의 판매자와 로그인한 판매자가 일치하는지 확인
       if (!product.getSellerId().equals(loginSeller.getSellerId())) {
-        log.warn("다른 판매자의 상품 수정 시도: 요청판매자={}, 상품판매자={}", 
-                 loginSeller.getSellerId(), product.getSellerId());
-        return ApiResponse.of(ApiResponseCode.BUSINESS_ERROR, "본인의 상품만 수정할 수 있습니다.");
+        log.warn("권한 없음: 상품 판매자 ID={}, 로그인 판매자 ID={}", product.getSellerId(), loginSeller.getSellerId());
+        return ApiResponse.of(ApiResponseCode.BUSINESS_ERROR, "해당 상품을 수정할 권한이 없습니다.");
       }
       
-      // 상태 업데이트
-      String oldStatus = product.getStatus();
+      // 상품 상태 업데이트
       product.setStatus(newStatus);
-      log.info("상품 상태 업데이트 시도: {} -> {}", oldStatus, newStatus);
+      int updateResult = productSVC.updateById(productId, product);
       
-      int result = productSVC.updateById(productId, product);
-      log.info("상품 상태 업데이트 결과: {}", result);
-      
-      if (result > 0) {
-        log.info("상품 상태 업데이트 성공: 상품ID={}, 새상태={}", productId, newStatus);
+      if (updateResult > 0) {
+        log.info("상품 상태 업데이트 성공: productId={}, newStatus={}", productId, newStatus);
         return ApiResponse.of(ApiResponseCode.SUCCESS, "상품 상태가 성공적으로 업데이트되었습니다.");
       } else {
-        log.warn("상품 상태 업데이트 실패: 상품ID={}, 새상태={}, 결과={}", productId, newStatus, result);
+        log.warn("상품 상태 업데이트 실패: productId={}, newStatus={}", productId, newStatus);
         return ApiResponse.of(ApiResponseCode.BUSINESS_ERROR, "상품 상태 업데이트에 실패했습니다.");
       }
       
     } catch (Exception e) {
-      log.error("상품 상태 업데이트 중 예외 발생: {}", e.getMessage(), e);
+      log.error("상품 상태 업데이트 중 오류 발생: {}", e.getMessage(), e);
       return ApiResponse.of(ApiResponseCode.INTERNAL_SERVER_ERROR, "상품 상태 업데이트 중 오류가 발생했습니다.");
+    }
+  }
+
+  // 일괄 상품 상태 업데이트 API
+  @PostMapping("/api/product/bulk-status")
+  @org.springframework.web.bind.annotation.ResponseBody
+  public ApiResponse<String> updateBulkProductStatus(@RequestBody Map<String, Object> request, HttpSession session) {
+    log.info("일괄 상품 상태 업데이트 요청 시작: {}", request);
+    
+    try {
+      // 요청 데이터 검증
+      if (request.get("productIds") == null || request.get("status") == null) {
+        log.error("필수 파라미터 누락: productIds={}, status={}", request.get("productIds"), request.get("status"));
+        return ApiResponse.of(ApiResponseCode.VALIDATION_ERROR, "필수 파라미터가 누락되었습니다.");
+      }
+      
+      // productIds를 안전하게 변환
+      List<Long> productIds;
+      Object productIdsObj = request.get("productIds");
+      if (productIdsObj instanceof List) {
+        @SuppressWarnings("unchecked")
+        List<Object> rawList = (List<Object>) productIdsObj;
+        productIds = rawList.stream()
+            .map(obj -> {
+              if (obj instanceof Number) {
+                return ((Number) obj).longValue();
+              } else if (obj instanceof String) {
+                return Long.parseLong((String) obj);
+              } else {
+                throw new IllegalArgumentException("상품 ID가 올바른 형식이 아닙니다: " + obj);
+              }
+            })
+            .toList();
+      } else {
+        log.error("productIds가 List 형태가 아님: {}", productIdsObj.getClass());
+        return ApiResponse.of(ApiResponseCode.VALIDATION_ERROR, "상품 ID 목록이 올바른 형식이 아닙니다.");
+      }
+      
+      String newStatus = request.get("status").toString();
+      
+      if (productIds.isEmpty()) {
+        log.error("상품 ID 목록이 비어있음");
+        return ApiResponse.of(ApiResponseCode.VALIDATION_ERROR, "선택된 상품이 없습니다.");
+      }
+      
+      log.info("상품 IDs: {}, 새로운 상태: {}", productIds, newStatus);
+      
+      // 세션에서 로그인한 판매자 정보 확인
+      LoginSeller loginSeller = (LoginSeller) session.getAttribute("loginSeller");
+      if (loginSeller == null) {
+        log.warn("로그인하지 않은 사용자가 일괄 상품 상태 업데이트 시도");
+        return ApiResponse.of(ApiResponseCode.BUSINESS_ERROR, "로그인이 필요합니다.");
+      }
+      
+      log.info("로그인한 판매자 ID: {}", loginSeller.getSellerId());
+      
+      // 권한 확인 및 상태 업데이트
+      int successCount = 0;
+      for (Long productId : productIds) {
+        try {
+          Optional<Product> productOpt = productSVC.findById(productId);
+          if (productOpt.isPresent()) {
+            Product product = productOpt.get();
+            
+            // 권한 확인: 상품의 판매자와 로그인한 판매자가 일치하는지 확인
+            if (product.getSellerId().equals(loginSeller.getSellerId())) {
+              product.setStatus(newStatus);
+              int updateResult = productSVC.updateById(productId, product);
+              if (updateResult > 0) {
+                successCount++;
+                log.info("상품 상태 업데이트 성공: productId={}, newStatus={}", productId, newStatus);
+              } else {
+                log.warn("상품 상태 업데이트 실패: productId={}", productId);
+              }
+            } else {
+              log.warn("권한 없음: 상품 ID={}, 상품 판매자 ID={}, 로그인 판매자 ID={}", 
+                      productId, product.getSellerId(), loginSeller.getSellerId());
+            }
+          } else {
+            log.warn("상품을 찾을 수 없음: {}", productId);
+          }
+        } catch (Exception e) {
+          log.error("상품 ID {} 처리 중 오류: {}", productId, e.getMessage());
+        }
+      }
+      
+      if (successCount > 0) {
+        log.info("일괄 상품 상태 업데이트 성공: {}개 상품 업데이트됨", successCount);
+        return ApiResponse.of(ApiResponseCode.SUCCESS, 
+                String.format("%d개의 상품 상태가 성공적으로 업데이트되었습니다.", successCount));
+      } else {
+        log.warn("일괄 상품 상태 업데이트 실패: 권한 없음 또는 상품을 찾을 수 없음");
+        return ApiResponse.of(ApiResponseCode.BUSINESS_ERROR, "업데이트할 수 있는 상품이 없습니다.");
+      }
+      
+    } catch (Exception e) {
+      log.error("일괄 상품 상태 업데이트 중 오류 발생: {}", e.getMessage(), e);
+      return ApiResponse.of(ApiResponseCode.INTERNAL_SERVER_ERROR, "일괄 상품 상태 업데이트 중 오류가 발생했습니다.");
     }
   }
 

@@ -27,5 +27,7 @@ public interface ProductDAO {
   // 홈 판매글 조회
   List<Product> allProduct();
 
+  // 판매자 ID로 상품들 비활성화
+  int deactivateBySellerId(Long sellerId);
 
 }

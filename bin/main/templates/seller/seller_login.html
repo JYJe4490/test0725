@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="판매자 로그인 페이지 - 안전하고 편리한 로그인 서비스" />
+  <title>판매자 로그인</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cabin:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    /* CSS 변수 정의 */
+    :root {
+      --color-primary: #658352;
+      --color-primary-light: #94A687;
+      --color-primary-dark: #4d683f;
+      --color-background: #FBF9EF;
+      --color-text: #1E2203;
+      --color-text-secondary: #666;
+      --color-border: #E9E7DE;
+      --color-white: #fff;
+      --color-error: #e74c3c;
+      --color-success: #27ae60;
+      --color-warning: #f39c12;
+      --shadow-light: 0 2px 12px rgba(0,0,0,0.06);
+      --shadow-medium: 0 4px 16px rgba(0,0,0,0.08);
+      --shadow-heavy: 0 8px 32px rgba(0,0,0,0.12);
+      --border-radius: 12px;
+      --border-radius-large: 24px;
+      --transition: all 0.3s ease;
+    }
+
+    /* 기본 스타일 */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', 'Cabin', sans-serif;
+      background-color: var(--color-background);
+      color: var(--color-text);
+      margin: 0;
+      padding: 120px 20px 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* 네비게이션 바 */
+    .navbar-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      background: var(--color-white);
+      box-shadow: var(--shadow-light);
+    }
+
+    .navbar {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 48px;
+    }
+
+    .navbar-logo-img {
+      height: 3rem;
+      border-radius: 8px;
+      transition: var(--transition);
+    }
+
+    .navbar-logo-img:hover {
+      transform: scale(1.05);
+    }
+
+    .navbar-buttons {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .btn-filled, .btn-outline {
+      display: flex;
+      align-items: center;
+      font-weight: 600;
+      padding: 10px 24px;
+      border-radius: var(--border-radius-large);
+      font-size: 1rem;
+      text-decoration: none;
+      transition: var(--transition);
+      cursor: pointer;
+      border: 2px solid var(--color-primary);
+    }
+
+    .btn-filled {
+      color: var(--color-white);
+      background: var(--color-primary);
+    }
+
+    .btn-filled:hover {
+      background: var(--color-primary-dark);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-medium);
+    }
+
+    .btn-outline {
+      color: var(--color-primary);
+      background: transparent;
+    }
+
+    .btn-outline:hover {
+      background: rgba(101, 131, 82, 0.1);
+      transform: translateY(-2px);
+    }
+
+    /* 로그인 컨테이너 */
+    .login-container {
+      width: 100%;
+      max-width: 450px;
+      text-align: center;
+      animation: fadeInUp 0.6s ease-out;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .login-container h1 {
+      font-size: 2.5rem;
+      color: var(--color-primary);
+      margin-bottom: 30px;
+      font-family: 'Cabin', sans-serif;
+      font-weight: 700;
+    }
+
+    /* 로그인 폼 */
+    .login-form {
+      background-color: var(--color-white);
+      padding: 40px 50px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-medium);
+      transition: var(--transition);
+    }
+
+    .login-form:hover {
+      box-shadow: var(--shadow-heavy);
+      transform: translateY(-2px);
+    }
+
+    .form-group {
+      margin-bottom: 25px;
+      text-align: left;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--color-text);
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 1rem;
+      border: 2px solid var(--color-border);
+      border-radius: 8px;
+      transition: var(--transition);
+      background: var(--color-white);
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(101, 131, 82, 0.1);
+    }
+
+    .form-group input.error {
+      border-color: var(--color-error);
+    }
+
+    .form-group input.success {
+      border-color: var(--color-success);
+    }
+
+    .error-message {
+      color: var(--color-error);
+      font-size: 0.85rem;
+      margin-top: 5px;
+      display: none;
+    }
+
+    .error-message.show {
+      display: block;
+      animation: shake 0.5s ease-in-out;
+    }
+
+    /* 서버 에러 메시지 */
+    .server-error-message {
+      background-color: rgba(231, 76, 60, 0.1);
+      border: 2px solid var(--color-error);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      color: var(--color-error);
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-align: center;
+      animation: fadeInDown 0.5s ease-out;
+    }
+
+    /* 계정 상태별 에러 메시지 스타일 */
+    .server-error-message.account-suspended {
+      background-color: rgba(243, 156, 18, 0.1);
+      border-color: var(--color-warning);
+      color: var(--color-warning);
+    }
+
+    .server-error-message.account-deactivated {
+      background-color: rgba(231, 76, 60, 0.1);
+      border-color: var(--color-error);
+      color: var(--color-error);
+    }
+
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    /* 로그인 버튼 */
+    .login-button {
+      width: 100%;
+      padding: 15px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      border-radius: var(--border-radius-large);
+      border: none;
+      background-color: var(--color-primary);
+      color: var(--color-white);
+      cursor: pointer;
+      transition: var(--transition);
+      margin-top: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-button:hover {
+      background-color: var(--color-primary-dark);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-medium);
+    }
+
+    .login-button:active {
+      transform: translateY(0);
+    }
+
+    .login-button:disabled {
+      background-color: var(--color-border);
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .login-button.loading {
+      pointer-events: none;
+    }
+
+    .login-button.loading::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      top: 50%;
+      left: 50%;
+      margin-left: -10px;
+      margin-top: -10px;
+      border: 2px solid transparent;
+      border-top: 2px solid var(--color-white);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* 반응형 디자인 */
+    @media (max-width: 768px) {
+      .navbar {
+        padding: 16px 20px;
+      }
+
+      .login-container {
+        max-width: 100%;
+        padding: 0 20px;
+      }
+
+      .login-form {
+        padding: 30px 25px;
+      }
+
+      .login-container h1 {
+        font-size: 2rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 100px 15px 30px;
+      }
+
+      .login-form {
+        padding: 25px 20px;
+      }
+
+      .btn-filled, .btn-outline {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+      }
+    }
+
+    /* 접근성 개선 */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* 포커스 표시 */
+    .btn-filled:focus,
+    .btn-outline:focus,
+    .login-button:focus {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+
+<header class="navbar-container" role="banner">
+  <nav class="navbar" role="navigation" aria-label="메인 네비게이션">
+    <a th:href="@{/home}" aria-label="홈으로 이동">
+      <img th:src="@{/images/free-icon-sprout-7101338.png}" alt="로고" class="navbar-logo-img"/>
+    </a>
+    <div class="navbar-buttons">
+      <a th:href="@{/common/select_login}" class="btn-outline" aria-label="로그인 페이지로 이동">로그인</a>
+      <a th:href="@{/common/select_signup}" class="btn-filled" aria-label="회원가입 페이지로 이동">회원가입</a>
+    </div>
+  </nav>
+</header>
+
+<main class="login-container" role="main">
+  <h1>판매자 로그인</h1>
+  <form th:action="@{/seller/login}" method="post" class="login-form" id="loginForm" novalidate>
+    <!-- 서버 에러 메시지 표시 영역 -->
+    <div th:if="${error}" class="server-error-message" id="server-error" role="alert">
+      <span th:text="${error}">이메일이나 비밀번호가 틀렸습니다</span>
+    </div>
+    
+    <div class="form-group">
+      <label for="email">이메일</label>
+      <input 
+        type="email" 
+        id="email" 
+        name="email"
+        placeholder="이메일 주소를 입력하세요" 
+        required 
+        autocomplete="email"
+        aria-describedby="email-error"
+        th:value="${loginForm != null ? loginForm.email : ''}"
+      >
+      <div id="email-error" class="error-message" role="alert"></div>
+    </div>
+    
+    <div class="form-group">
+      <label for="password">비밀번호</label>
+      <input 
+        type="password" 
+        id="password" 
+        name="password"
+        placeholder="비밀번호를 입력하세요" 
+        required 
+        autocomplete="current-password"
+        aria-describedby="password-error"
+      >
+      <div id="password-error" class="error-message" role="alert"></div>
+    </div>
+    
+    <button type="submit" class="login-button" id="loginButton">
+      <span class="button-text">로그인</span>
+    </button>
+  </form>
+</main>
+
+<script>
+  // 전역 변수
+  let isSubmitting = false;
+
+  // DOM 요소
+  const loginForm = document.getElementById('loginForm');
+  const emailInput = document.getElementById('email');
+  const passwordInput = document.getElementById('password');
+  const loginButton = document.getElementById('loginButton');
+  const buttonText = loginButton.querySelector('.button-text');
+
+  // 유효성 검사 규칙 (컨트롤러 로직에 맞춤)
+  const validationRules = {
+    email: {
+      required: true,
+      pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+      message: '올바른 이메일 형식을 입력해주세요.'
+    },
+    password: {
+      required: true,
+      minLength: 1, // 비밀번호는 필수이지만 길이 제한은 없음 (컨트롤러에서 확인)
+      message: '비밀번호를 입력해주세요.'
+    }
+  };
+
+  // 유효성 검사 함수들
+  const validators = {
+    email: (value) => {
+      if (!value || value.trim() === '') {
+        return '이메일을 입력해주세요.';
+      }
+      if (!validationRules.email.pattern.test(value.trim())) {
+        return validationRules.email.message;
+      }
+      return null;
+    },
+    password: (value) => {
+      if (!value || value.trim() === '') {
+        return '비밀번호를 입력해주세요.';
+      }
+      return null;
+    }
+  };
+
+  // 에러 표시 함수
+  function showError(input, message) {
+    const errorElement = document.getElementById(`${input.id}-error`);
+    if (errorElement) {
+      input.classList.add('error');
+      input.classList.remove('success');
+      errorElement.textContent = message;
+      errorElement.classList.add('show');
+    }
+  }
+
+  // 성공 표시 함수
+  function showSuccess(input) {
+    const errorElement = document.getElementById(`${input.id}-error`);
+    if (errorElement) {
+      input.classList.remove('error');
+      input.classList.add('success');
+      errorElement.classList.remove('show');
+    }
+  }
+
+  // 입력 필드 유효성 검사
+  function validateField(input) {
+    const value = input.value.trim();
+    const validator = validators[input.id];
+    
+    if (validator) {
+      const error = validator(value);
+      if (error) {
+        showError(input, error);
+        return false;
+      } else {
+        showSuccess(input);
+        return true;
+      }
+    }
+    return true;
+  }
+
+  // 실시간 유효성 검사
+  function setupRealTimeValidation() {
+    [emailInput, passwordInput].forEach(input => {
+      input.addEventListener('blur', () => validateField(input));
+      input.addEventListener('input', () => {
+        if (input.classList.contains('error')) {
+          validateField(input);
+        }
+      });
+    });
+  }
+
+  // 폼 제출 처리
+  function handleSubmit(e) {
+    e.preventDefault();
+    
+    if (isSubmitting) return;
+
+    // 모든 필드 유효성 검사
+    const isEmailValid = validateField(emailInput);
+    const isPasswordValid = validateField(passwordInput);
+
+    if (!isEmailValid || !isPasswordValid) {
+      // 첫 번째 에러 필드로 포커스
+      const firstErrorInput = document.querySelector('.error');
+      if (firstErrorInput) {
+        firstErrorInput.focus();
+      }
+      return;
+    }
+
+    // 로딩 상태 시작
+    isSubmitting = true;
+    loginButton.classList.add('loading');
+    loginButton.disabled = true;
+    buttonText.textContent = '로그인 중...';
+
+    // 폼 제출
+    setTimeout(() => {
+      loginForm.submit();
+    }, 500);
+  }
+
+  // 키보드 접근성
+  function setupKeyboardAccessibility() {
+    loginForm.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !isSubmitting) {
+        handleSubmit(e);
+      }
+    });
+  }
+
+  // 서버 에러 메시지 처리
+  function handleServerError() {
+    const serverError = document.getElementById('server-error');
+    if (serverError) {
+      // 에러 메시지에 따라 입력 필드에 에러 스타일 적용
+      emailInput.classList.add('error');
+      passwordInput.classList.add('error');
+      
+      // 에러 메시지가 있을 때 입력 필드 포커스
+      setTimeout(() => {
+        emailInput.focus();
+      }, 100);
+
+      // 에러 메시지 타입에 따른 추가 처리
+      const errorText = serverError.textContent.trim();
+      
+      // 에러 메시지 타입에 따른 클래스 추가
+      if (errorText.includes('비활성화') || errorText.includes('정지')) {
+        serverError.classList.add('account-deactivated');
+      }
+      
+      if (errorText.includes('존재하지 않는 이메일')) {
+        // 이메일 필드에 특별한 에러 표시
+        showError(emailInput, '존재하지 않는 이메일입니다.');
+      } else if (errorText.includes('비밀번호가 일치하지 않습니다')) {
+        // 비밀번호 필드에 특별한 에러 표시
+        showError(passwordInput, '비밀번호가 일치하지 않습니다.');
+      } else if (errorText.includes('비활성화') || errorText.includes('정지') || errorText.includes('없는 계정')) {
+        // 계정 상태 관련 에러는 서버 메시지만 표시
+        emailInput.classList.add('error');
+        passwordInput.classList.add('error');
+      }
+    }
+  }
+
+  // 페이지 로드 시 초기화
+  function initialize() {
+    setupRealTimeValidation();
+    setupKeyboardAccessibility();
+    loginForm.addEventListener('submit', handleSubmit);
+    
+    // 서버 에러 메시지 처리
+    handleServerError();
+    
+    // 페이지 가시성 변경 시 처리
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        console.log('판매자 로그인 페이지가 활성화되었습니다.');
+      }
+    });
+  }
+
+  // DOM 로드 완료 시 초기화
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initialize);
+  } else {
+    initialize();
+  }
+
+  // 에러 처리
+  window.addEventListener('error', (e) => {
+    console.error('페이지 에러 발생:', e);
+  });
+</script>
+
+</body>
+</html>
